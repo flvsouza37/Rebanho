@@ -18,6 +18,8 @@ const Pessoa = z.object({
   ministerios: z.string().max(300).transform((x) => x.split(',').map((m) => m.trim()).filter(Boolean)),
   primeira_visita: data, ultimo_contato: data, como_conheceu: texto(80), acompanhante: texto(80), batismo: data, membro_desde: data,
   lider: z.literal('on').optional().transform((x) => x === 'on'),
+  // ausente quando o formulário não mostra campanhas: aí o valor salvo não muda
+  campanha_id: z.string().uuid().or(z.literal('')).optional().transform((x) => (x === undefined ? undefined : x || null)),
 })
 
 const digitos = (s: string | null) => (s ?? '').replace(/\D/g, '')

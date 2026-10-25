@@ -22,10 +22,12 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
   const { data: p } = await supabase.from('pessoas').select('*').eq('id', id).maybeSingle()
   if (!p) notFound()
   const pastor = s.papel === 'pastor', fin = podeFin(s.papel)
-  const [{ data: pastoral }, { data: comp }, { data: contribs }] = await Promise.all([
+  const verCamp = ['pastor', 'secretaria', 'lider'].includes(s.papel) && !!p.campanha_id
+  const [{ data: pastoral }, { data: comp }, { data: contribs }, { data: camp }] = await Promise.all([
     pastor ? supabase.from('pessoas_pastoral').select('*').eq('pessoa_id', id).maybeSingle() : Promise.resolve({ data: null }),
     fin ? supabase.from('compromissos').select('*').eq('pessoa_id', id).maybeSingle() : Promise.resolve({ data: null }),
     fin ? supabase.from('contribuicoes').select('competencia, valor, status, recibo, pago_em').eq('pessoa_id', id).order('competencia', { ascending: false }).limit(12) : Promise.resolve({ data: null }),
+    verCamp ? supabase.from('campanhas').select('id, titulo').eq('id', p.campanha_id).maybeSingle() : Promise.resolve({ data: null }),
   ])
 
   return (
@@ -42,7 +44,7 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
         </div>
         <div className="card"><header><h2>Vida na igreja</h2></header>
           <Kv itens={[['Célula', p.grupo], ['Ministérios', (p.ministerios ?? []).join(', ')], ['Batismo', p.batismo && dataBR(p.batismo)], ['Membro desde', p.membro_desde && dataBR(p.membro_desde)],
-            ['Primeira visita', p.primeira_visita && dataBR(p.primeira_visita)], ['Etapa', p.etapa], ['Como conheceu', p.como_conheceu], ['Acompanha', p.acompanhante], ['Último contato', p.ultimo_contato && dataBR(p.ultimo_contato)]]} />
+            ['Primeira visita', p.primeira_visita && dataBR(p.primeira_visita)], ['Etapa', p.etapa], ['Como conheceu', p.como_conheceu], ['Campanha', camp && <Link href={`/campanhas/${camp.id}`}>{camp.titulo}</Link>], ['Acompanha', p.acompanhante], ['Último contato', p.ultimo_contato && dataBR(p.ultimo_contato)]]} />
         </div>
       </div>
       <div className="grid g2">

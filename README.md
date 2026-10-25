@@ -12,6 +12,7 @@ Esta é a primeira versão de produção, construída a partir do protótipo nav
 - **Contribuições**: carnê do mês a partir do compromisso de cada membro. A baixa lança no caixa e emite recibo numerado (REC-AAAA-NNNN) no mesmo passo.
 - **Auditoria** gravada pelo próprio banco. Ninguém edita nem apaga, e a observação pastoral nunca vai para a trilha.
 - **Ouvidoria** com protocolo (OUV-AAAA-NNNN). A manifestação anônima não guarda quem enviou.
+- **Marketing evangelístico**: ranking e mapa de oportunidade das microáreas da cidade, com perfil, horário e ações sugeridas para cada bairro. Campanhas com meta e orçamento, e cada visitante ligado à campanha que o trouxe.
 - **Área do membro**: contribuições em aberto, recibos, preferências de contato e cópia dos próprios dados.
 
 ## Como está organizado
@@ -50,5 +51,5 @@ Custo de referência: tudo cabe no plano gratuito durante os testes. Em uso come
 
 1. **Pagamentos:** Pix com QR por contribuição, boleto registrado e baixa automática pelo webhook de um gateway brasileiro, como Asaas ou Efí. Depois, Pix Automático.
 2. **WhatsApp Business (API oficial da Meta):** lembretes e recibos automáticos, só para quem consentiu.
-3. **Módulos do protótipo ainda não portados:** visitantes com funil e modo recepção, radar pastoral, manutenção GUT e 5W2H, escalas, avisos e mensageria, site e eventos, cantina, orçamento e conciliação por extrato.
+3. **Módulos do protótipo ainda não portados:** mensageria das campanhas, visitantes com funil e modo recepção, radar pastoral, manutenção GUT e 5W2H, escalas, avisos e mensageria, site e eventos, cantina, orçamento e conciliação por extrato.
 4. **App nas lojas** (opcional): empacotar o PWA ou criar um app nativo usando o mesmo banco.

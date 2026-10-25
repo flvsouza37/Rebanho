@@ -11,6 +11,10 @@ export const MENU: { grupo: string; itens: { href: string; nome: string; papeis:
     { href: '/pessoas?s=membros', nome: 'Membros', papeis: ['pastor', 'tesouraria', 'secretaria', 'lider'] },
     { href: '/pessoas?s=visitante', nome: 'Visitantes', papeis: ['pastor', 'secretaria', 'lider'] },
   ] },
+  { grupo: 'Missão', itens: [
+    { href: '/alcance', nome: 'Marketing evangelístico', papeis: ['pastor', 'secretaria', 'lider'] },
+    { href: '/campanhas', nome: 'Campanhas', papeis: ['pastor', 'secretaria', 'lider'] },
+  ] },
   { grupo: 'Gestão', itens: [
     { href: '/tesouraria', nome: 'Tesouraria', papeis: ['pastor', 'tesouraria'] },
     { href: '/contribuicoes', nome: 'Contribuições', papeis: ['pastor', 'tesouraria'] },

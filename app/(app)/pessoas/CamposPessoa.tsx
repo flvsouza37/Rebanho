@@ -4,7 +4,9 @@ const v = (p: P, k: string) => (p[k] ?? '') as string
 const STATUS = ['visitante', 'congregado', 'membro', 'afastado', 'transferido']
 const ETAPAS = ['Primeira visita', 'Voltou', 'Em célula', 'Decidiu seguir', 'Classe de membresia']
 
-export function CamposPessoa({ p = {} }: { p?: P }) {
+export type OpcaoCampanha = { id: string; titulo: string }
+
+export function CamposPessoa({ p = {}, campanhas = [] }: { p?: P; campanhas?: OpcaoCampanha[] }) {
   return (
     <>
       <label className="f full">Nome completo<input type="text" name="nome" required minLength={2} maxLength={120} defaultValue={v(p, 'nome')} /></label>
@@ -26,6 +28,9 @@ export function CamposPessoa({ p = {} }: { p?: P }) {
       <label className="f">Primeira visita<input type="date" name="primeira_visita" defaultValue={v(p, 'primeira_visita')} /></label>
       <label className="f">Último contato<input type="date" name="ultimo_contato" defaultValue={v(p, 'ultimo_contato')} /></label>
       <label className="f">Como conheceu<input type="text" name="como_conheceu" defaultValue={v(p, 'como_conheceu')} /></label>
+      {campanhas.length > 0 && <label className="f">Veio por qual campanha
+        <select name="campanha_id" defaultValue={v(p, 'campanha_id')}><option value="">Nenhuma</option>{campanhas.map((c) => <option key={c.id} value={c.id}>{c.titulo}</option>)}</select>
+      </label>}
       <label className="f">Quem acompanha<input type="text" name="acompanhante" defaultValue={v(p, 'acompanhante')} /></label>
       <label className="f">Batismo<input type="date" name="batismo" defaultValue={v(p, 'batismo')} /></label>
       <label className="f">Membro desde<input type="date" name="membro_desde" defaultValue={v(p, 'membro_desde')} /></label>

@@ -161,4 +161,32 @@ select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
 select pg_temp.igual((select count(*) from equipe(:'ig_a'))::int, 0, 'só o pastor lista a equipe');
 reset role;
 
+-- Marketing: microáreas para todos, campanhas para pastor e secretaria, liderança só lê
+select pg_temp.como('00000000-0000-0000-0000-0000000000a5');
+select pg_temp.igual((select count(*) > 0 from microareas where municipio = 'Niterói'), true, 'qualquer usuário lê as microáreas');
+select pg_temp.erro($$update microareas set populacao = 1$$, 'permission denied');
+select pg_temp.igual((select count(*) from campanhas)::int, 0, 'membro não vê campanhas');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
+insert into campanhas (igreja_id, titulo, microarea, municipio, uf, perfil, meta)
+  values (:'ig_a', 'Café de boas-vindas: Icaraí', 'Icaraí', 'Niterói', 'RJ', 'alta', 15) returning id as camp_a \gset
+update pessoas set campanha_id = :'camp_a' where id = '11111111-0000-0000-0000-000000000002';
+select pg_temp.igual((select visitantes::int from campanhas_resultado where id = :'camp_a'), 1, 'visitante ligado à campanha conta no resultado');
+delete from campanhas where id = :'camp_a';
+select pg_temp.igual((select count(*) from campanhas)::int, 1, 'secretaria não exclui campanha');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a4');
+select pg_temp.igual((select count(*) from campanhas)::int, 1, 'líder vê campanhas');
+select pg_temp.erro(format($$insert into campanhas (igreja_id, titulo) values (%L, 'Do líder')$$, :'ig_a'), 'row-level security');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.igual((select count(*) from campanhas)::int, 0, 'outra igreja não vê campanhas');
+insert into campanhas (igreja_id, titulo) values (:'ig_b', 'Campanha da B') returning id as camp_b \gset
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.erro(format($$update pessoas set campanha_id = %L where id = '11111111-0000-0000-0000-000000000002'$$, :'camp_b'), 'não pertence');
+delete from campanhas where id = :'camp_a';
+select pg_temp.igual((select campanha_id from pessoas where id = '11111111-0000-0000-0000-000000000002'), null::uuid, 'pastor exclui campanha e o visitante fica sem origem');
+reset role;
+
 \echo 'TODOS OS TESTES PASSARAM'
