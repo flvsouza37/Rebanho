@@ -3,6 +3,14 @@ import { useState } from 'react'
 import { supabaseNavegador } from '@/lib/supabase/client'
 import { Marca } from '@/components/Marca'
 
+// Mensagens do Supabase Auth que aparecem para quem tenta entrar.
+function traduzir(msg: string) {
+  if (/rate limit/i.test(msg)) return 'Muitos pedidos de link em pouco tempo. Espere alguns minutos e tente de novo, ou use o último link que chegou no seu e-mail.'
+  if (/security purposes|after \d+ seconds/i.test(msg)) return 'Aguarde um minuto antes de pedir outro link.'
+  if (/invalid.*email|email.*invalid/i.test(msg)) return 'Confira o e-mail digitado.'
+  return 'Não foi possível enviar o link agora. Tente de novo em instantes.'
+}
+
 // Login sem senha: a pessoa recebe um link por e-mail.
 export default function Entrar() {
   const [email, setEmail] = useState('')
@@ -17,7 +25,7 @@ export default function Entrar() {
       email: email.trim(),
       options: { emailRedirectTo: `${site}/auth/confirmar` },
     })
-    if (error) { setErro(error.message); setEstado('erro') } else setEstado('enviado')
+    if (error) { setErro(traduzir(error.message)); setEstado('erro') } else setEstado('enviado')
   }
 
   return (
