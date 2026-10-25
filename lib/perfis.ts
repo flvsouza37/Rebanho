@@ -15,6 +15,11 @@ export const MENU: { grupo: string; itens: { href: string; nome: string; papeis:
     { href: '/alcance', nome: 'Marketing evangelístico', papeis: ['pastor', 'secretaria', 'lider'] },
     { href: '/campanhas', nome: 'Campanhas', papeis: ['pastor', 'secretaria', 'lider'] },
   ] },
+  { grupo: 'Estratégia', itens: [
+    { href: '/diagnostico', nome: 'Diagnóstico MUDA e Diakonia', papeis: ['pastor', 'secretaria'] },
+    { href: '/pdca', nome: 'Ciclos PDCA', papeis: ['pastor', 'secretaria', 'lider'] },
+    { href: '/kanban', nome: 'Kanban de execução', papeis: ['pastor', 'secretaria', 'lider'] },
+  ] },
   { grupo: 'Gestão', itens: [
     { href: '/tesouraria', nome: 'Tesouraria', papeis: ['pastor', 'tesouraria'] },
     { href: '/contribuicoes', nome: 'Contribuições', papeis: ['pastor', 'tesouraria'] },

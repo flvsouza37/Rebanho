@@ -60,7 +60,7 @@ export default async function Campanha({ params, searchParams }: { params: Promi
           {c.convite && <><h3>Convite</h3><p className="quote">{c.convite}</p>
             {whats && <div className="row"><a className="btn ghost sm" href={whats} target="_blank" rel="noopener noreferrer">Compartilhar no WhatsApp</a></div>}</>}
           {edita && <div className="row">
-            {['Planejada', 'Em andamento', 'Encerrada'].filter((x) => x !== c.status).map((x) => (
+            {['Planejada', 'Em andamento', 'Em avaliação', 'Encerrada'].filter((x) => x !== c.status).map((x) => (
               <form key={x} action={mudarStatus.bind(null, id, x)}><button className="btn ghost sm" type="submit">Marcar como {x.toLowerCase()}</button></form>
             ))}
           </div>}

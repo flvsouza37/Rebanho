@@ -18,7 +18,7 @@ const Campanha = z.object({
   inicio: data, fim: data,
   meta: z.coerce.number().int().min(0, 'A meta não pode ser negativa.'),
   orcamento: z.coerce.number().min(0, 'O orçamento não pode ser negativo.'),
-  status: z.enum(['Planejada', 'Em andamento', 'Encerrada']),
+  status: z.enum(['Planejada', 'Em andamento', 'Em avaliação', 'Encerrada']),
   responsavel: texto(120), acoes: texto(2000), convite: texto(1000),
 })
 
@@ -44,11 +44,12 @@ export async function salvarCampanha(id: string | null, _: Resultado, dados: For
 }
 
 export async function mudarStatus(id: string, status: string) {
-  if (!['Planejada', 'Em andamento', 'Encerrada'].includes(status)) return
+  if (!['Planejada', 'Em andamento', 'Em avaliação', 'Encerrada'].includes(status)) return
   const supabase = await supabaseServidor()
   await supabase.from('campanhas').update({ status }).eq('id', id)
   revalidatePath(`/campanhas/${id}`)
   revalidatePath('/campanhas')
+  revalidatePath('/kanban')
 }
 
 export async function excluirCampanha(id: string) {

@@ -24,7 +24,7 @@ export function CamposCampanha({ c }: { c: Campanha }) {
       <label className="f">Orçamento (R$)<input type="number" name="orcamento" min="0" step="0.01" defaultValue={c.orcamento ?? 0} /></label>
       <label className="f">Responsável<input type="text" name="responsavel" defaultValue={c.responsavel ?? ''} placeholder="Ex.: Ministério de evangelismo" /></label>
       <label className="f">Situação
-        <select name="status" defaultValue={c.status ?? 'Planejada'}>{['Planejada', 'Em andamento', 'Encerrada'].map((s) => <option key={s}>{s}</option>)}</select>
+        <select name="status" defaultValue={c.status ?? 'Planejada'}>{['Planejada', 'Em andamento', 'Em avaliação', 'Encerrada'].map((s) => <option key={s}>{s}</option>)}</select>
       </label>
       <label className="f full">Ações<textarea name="acoes" rows={4} defaultValue={c.acoes ?? P.acoes.join('\n')} /></label>
       <label className="f full">Convite<textarea name="convite" rows={3} defaultValue={c.convite ?? P.convite} /></label>

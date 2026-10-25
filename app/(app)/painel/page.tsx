@@ -4,6 +4,8 @@ import { supabaseServidor } from '@/lib/supabase/server'
 import { brl, mesAtual, nomeMes, hoje } from '@/lib/formato'
 import { podeFin } from '@/lib/perfis'
 import { Cabecalho } from '@/components/Cabecalho'
+import { carregarEstrategia } from '@/lib/estrategia-dados'
+import { insights, grauDe } from '@/lib/estrategia'
 
 export const metadata = { title: 'Painel' }
 
@@ -49,6 +51,26 @@ export default async function Painel() {
     kpis.push({ rotulo: 'Ouvidoria em aberto', valor: ouv, sub: 'manifestações sem resposta', href: '/ouvidoria', alerta: ouv > 0 })
   }
 
+  // Estratégia: ameaças do último diagnóstico e o andamento do kanban.
+  let estrategia: React.ReactNode = null
+  if (s.papel !== 'tesouraria') {
+    const [est, ciclos, tarefas] = await Promise.all([
+      carregarEstrategia(ig, s.papel !== 'lider'),
+      supabase.from('pdca').select('fase, prazo').eq('igreja_id', ig).neq('fase', 'Concluído'),
+      supabase.from('tarefas').select('coluna, prazo').eq('igreja_id', ig).neq('coluna', 'feito'),
+    ])
+    const am = insights(est.atual, est.anterior, est.ctx).filter((x) => x.tipo === 'ameaca').slice(0, 4)
+    const abertos = [...(ciclos.data ?? []), ...(tarefas.data ?? [])], atrasados = abertos.filter((x) => x.prazo && x.prazo < hoje()).length
+    estrategia = (
+      <div className="grid g2">
+        {s.papel !== 'lider' && <div className="card"><header><h2>Ameaças ministeriais</h2><Link className="btn ghost sm" href="/diagnostico?aba=insights">Abrir diagnóstico</Link></header>
+          {am.length ? <div className="list">{am.map((x) => <div className="item" key={x.id}><span className={`stripe ${grauDe(x.score).k}`} /><div className="body"><b>{x.titulo}</b><span className="small muted">{x.origem} · {grauDe(x.score).n}</span></div><span className="score">{x.score}</span></div>)}</div>
+            : <div className="empty">{est.atual ? 'Nenhuma ameaça no último diagnóstico.' : 'Faça o primeiro diagnóstico MUDA e Diakonia.'}</div>}</div>}
+        <Link href="/kanban" className={`card kpi kpi-link${atrasados ? ' alert' : ''}`}><span className="lbl">Execução: PDCA e tarefas abertas</span><span className="val">{abertos.length}</span><span className="sub">{atrasados} com prazo vencido · abrir kanban</span></Link>
+      </div>
+    )
+  }
+
   return (
     <>
       <Cabecalho sobre={'Painel · ' + s.igreja.nome} titulo="Como está a igreja" texto="Toque num indicador para ver o que gerou o número." />
@@ -59,6 +81,7 @@ export default async function Painel() {
           </Link>
         ))}
       </div>
+      {estrategia}
     </>
   )
 }

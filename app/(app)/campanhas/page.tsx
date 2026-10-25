@@ -7,7 +7,7 @@ import { Cabecalho } from '@/components/Cabecalho'
 
 export const metadata = { title: 'Campanhas' }
 
-const COR: Record<string, string> = { Planejada: '', 'Em andamento': 'info', Encerrada: 'ok' }
+const COR: Record<string, string> = { Planejada: '', 'Em andamento': 'info', 'Em avaliação': 'warn', Encerrada: 'ok' }
 
 export default async function Campanhas() {
   const s = await exigir(['pastor', 'secretaria', 'lider'])

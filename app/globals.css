@@ -252,3 +252,35 @@ details.inline[open]{padding:10px;border:1px solid var(--line);border-radius:8px
   .perfilbox .trocar{display:none}
   .perfilbox .nav{padding:4px 8px}
 }
+/* Estratégia: matriz Diakonia, kanban e etapas do PDCA */
+.diak{min-width:920px;border-collapse:collapse}
+.diak th,.diak td{border:1px solid var(--line);padding:0;vertical-align:top}
+.diak td{height:1px}
+.diak thead th{padding:6px 8px;font-size:.8rem;text-align:center;background:var(--surface-2)}
+.diak thead th.gh{background:var(--fg);color:var(--bg)}
+.diak thead th.sub{font-weight:500;font-style:italic;color:var(--muted)}
+.diak tbody th{padding:8px;text-align:left;white-space:nowrap;font-size:.92rem;vertical-align:middle}
+.diak .evid{padding:8px;min-width:180px;max-width:240px}
+.hcel{box-sizing:border-box;display:flex;flex-direction:column;gap:3px;width:100%;height:100%;min-height:76px;padding:6px 8px;font-size:.78rem;line-height:1.25;color:inherit;text-decoration:none}
+.hcel b{font-size:1.05rem}.hcel b small{font-size:.7rem;margin-left:4px;color:var(--muted)}
+.hcel span{color:var(--muted)}
+.hcel:hover,.hcel:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hcel.h0{background:var(--crit-soft)}.hcel.h2{background:var(--warn-soft)}.hcel.h3{background:var(--surface-2)}.hcel.h4{background:var(--ok-soft)}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px;max-width:100%}
+.kanban.salvando{opacity:.7}
+.kcol{background:var(--surface-2);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:160px;border:2px dashed transparent}
+.kcol.over{border-color:var(--accent)}
+.kcol>header{display:flex;gap:8px;align-items:center}
+.kcol>header .cnt{font-family:var(--f-mono);color:var(--muted);font-size:.85rem}
+.kcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;gap:8px;cursor:grab}
+.kcard .body{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.kmv{gap:4px}
+.kmini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.kmini div{display:flex;flex-direction:column}.kmini b{font-size:1.4rem}
+.pdca-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.pdca-steps span{display:flex;flex-direction:column;align-items:center;padding:6px 4px;border-radius:6px;background:var(--surface-2);font-size:.74rem;color:var(--muted)}
+.pdca-steps b{font-size:1rem}
+.pdca-steps .on{background:var(--accent);color:var(--accent-ink)}
+.pdca-steps .ok{background:var(--ok-soft);color:var(--ok)}
+.card:target{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+button.chk{font:inherit;cursor:pointer;background:transparent}
+@media (max-width:760px){.kanban{grid-template-columns:repeat(4,minmax(78vw,1fr))}}

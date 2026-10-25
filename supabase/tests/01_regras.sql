@@ -189,4 +189,37 @@ delete from campanhas where id = :'camp_a';
 select pg_temp.igual((select campanha_id from pessoas where id = '11111111-0000-0000-0000-000000000002'), null::uuid, 'pastor exclui campanha e o visitante fica sem origem');
 reset role;
 
+-- Estratégia: diagnóstico para pastor e secretaria, PDCA visível à liderança, tarefas para a liderança também
+select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
+insert into diagnosticos (igreja_id, titulo, diak) values (:'ig_a', 'Diagnóstico 4º trimestre', '{"comunhao":{"multidao":{"servido":{"n":2,"t":"ninguém liga"}}}}')
+  returning id as dg_a \gset
+insert into pdca (igreja_id, titulo, tipo, chave, ref, diagnostico_id, base)
+  values (:'ig_a', 'Comunhão: a multidão é servida pouco', 'ameaca', 'ins-x', 'dk|comunhao|multidao|servido', :'dg_a', 2) returning id as pd_a \gset
+select pg_temp.erro(format($$insert into pdca (igreja_id, titulo, tipo, chave) values (%L, 'Repetido aberto', 'ameaca', 'ins-x')$$, :'ig_a'), 'duplicate key');
+select pg_temp.erro(format($$update pdca set fase = 'Concluído' where id = %L$$, :'pd_a'), 'check constraint');
+update pdca set fase = 'Concluído', decisao = 'Ajustar e re-testar', feito_em = current_date where id = :'pd_a';
+insert into pdca (igreja_id, titulo, tipo, chave, ciclo) values (:'ig_a', 'Comunhão: novo ciclo', 'ameaca', 'ins-x', 2);
+select pg_temp.igual((select count(*) from pdca where chave = 'ins-x')::int, 2, 'ciclo fechado permite abrir o próximo');
+delete from diagnosticos where id = :'dg_a';
+select pg_temp.igual((select count(*) from diagnosticos)::int, 1, 'secretaria não exclui diagnóstico');
+update campanhas set status = 'Em avaliação' where igreja_id = :'ig_a';
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a4');
+select pg_temp.igual((select count(*) from diagnosticos)::int, 0, 'líder não vê o diagnóstico');
+select pg_temp.igual((select count(*) from pdca)::int, 2, 'líder vê os ciclos PDCA no kanban');
+update pdca set fase = 'D' where chave = 'ins-x' and fase = 'P';
+select pg_temp.igual((select count(*) from pdca where fase = 'D')::int, 0, 'líder não altera PDCA');
+insert into tarefas (igreja_id, titulo, origem, coluna) values (:'ig_a', 'Kit de boas-vindas', 'Captação', 'afazer') returning id as tk_a \gset
+update tarefas set coluna = 'fazendo' where id = :'tk_a';
+select pg_temp.igual((select coluna from tarefas where id = :'tk_a'), 'fazendo', 'líder move a própria tarefa no kanban');
+select pg_temp.erro(format($$update tarefas set coluna = 'pronto' where id = %L$$, :'tk_a'), 'check constraint');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a5');
+select pg_temp.igual((select count(*) from tarefas)::int + (select count(*) from pdca)::int, 0, 'membro não vê PDCA nem tarefas');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.igual((select count(*) from diagnosticos)::int + (select count(*) from tarefas)::int, 0, 'outra igreja não vê a estratégia');
+select pg_temp.erro(format($$insert into pdca (igreja_id, titulo, tipo, chave, diagnostico_id) values (%L, 'Da B', 'ameaca', 'b', %L)$$, :'ig_b', :'dg_a'), 'não pertence');
+reset role;
+
 \echo 'TODOS OS TESTES PASSARAM'
