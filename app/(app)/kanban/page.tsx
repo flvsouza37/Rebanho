@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { dataBR, hoje } from '@/lib/formato'
 import { KCOL, COL_CAMP, COL_PDCA, FASEN, grauDe } from '@/lib/estrategia'
@@ -14,7 +14,7 @@ type Cartao = { id: string; col: string; t: string; orig: string; prazo: string 
 const dias = (d: string) => Math.round((new Date(d + 'T00:00:00').getTime() - new Date(hoje() + 'T00:00:00').getTime()) / 864e5)
 
 export default async function Kanban({ searchParams }: { searchParams: Promise<{ o?: string; r?: string; tudo?: string; erro?: string }> }) {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
+  const s = await exigirAcesso('kanban')
   const sp = await searchParams
   const supabase = await supabaseServidor()
   const ig = s.igreja.id
@@ -24,9 +24,9 @@ export default async function Kanban({ searchParams }: { searchParams: Promise<{
     supabase.from('tarefas').select('*').eq('igreja_id', ig),
   ])
   const todos: Cartao[] = [
-    ...(camps ?? []).map((k) => ({ id: 'campanhas:' + k.id, col: COL_CAMP[k.status] ?? 'afazer', t: k.titulo, orig: 'Captação', prazo: k.fim, resp: k.responsavel, urg: 'mod', sub: 'Campanha' + (k.microarea ? ' · ' + k.microarea : ''), feito: k.status === 'Encerrada' ? k.fim : null, href: `/campanhas/${k.id}` })),
-    ...(ciclos ?? []).map((p) => ({ id: 'pdca:' + p.id, col: COL_PDCA[p.fase] ?? 'afazer', t: p.titulo, orig: 'PDCA', prazo: p.prazo, resp: p.responsavel, urg: p.tipo === 'pratica' ? 'ok' : grauDe(p.score).k, sub: `${p.tipo === 'pratica' ? 'Boa prática' : 'Ameaça'} · ciclo ${p.ciclo} · ${FASEN[p.fase]}`, feito: p.feito_em, href: `/pdca#pd-${p.id}`, fixo: p.fase === 'Concluído' })),
-    ...(tarefas ?? []).map((x) => ({ id: 'tarefas:' + x.id, col: x.coluna, t: x.titulo, orig: x.origem, prazo: x.prazo, resp: x.responsavel, urg: x.prioridade, sub: x.descricao ?? 'Tarefa', feito: x.feito_em, apaga: s.papel !== 'lider' })),
+    ...(camps ?? []).map((k) => ({ id: 'campanhas:' + k.id, col: COL_CAMP[k.status] ?? 'afazer', t: k.titulo, orig: 'Captação', prazo: k.fim, resp: k.responsavel, urg: 'mod', sub: 'Campanha' + (k.microarea ? ' · ' + k.microarea : ''), feito: k.status === 'Encerrada' ? k.fim : null, href: `/campanhas/${k.id}`, fixo: !pode(s, 'missao', 'editar') })),
+    ...(ciclos ?? []).map((p) => ({ id: 'pdca:' + p.id, col: COL_PDCA[p.fase] ?? 'afazer', t: p.titulo, orig: 'PDCA', prazo: p.prazo, resp: p.responsavel, urg: p.tipo === 'pratica' ? 'ok' : grauDe(p.score).k, sub: `${p.tipo === 'pratica' ? 'Boa prática' : 'Ameaça'} · ciclo ${p.ciclo} · ${FASEN[p.fase]}`, feito: p.feito_em, href: `/pdca#pd-${p.id}`, fixo: p.fase === 'Concluído' || !pode(s, 'pdca', 'editar') })),
+    ...(tarefas ?? []).map((x) => ({ id: 'tarefas:' + x.id, col: x.coluna, t: x.titulo, orig: x.origem, prazo: x.prazo, resp: x.responsavel, urg: x.prioridade, sub: x.descricao ?? 'Tarefa', feito: x.feito_em, apaga: pode(s, 'kanban', 'editar'), fixo: !pode(s, 'kanban', 'editar') })),
   ]
   const origens = ['Todas', ...new Set(todos.map((c) => c.orig))]
   const resps = [...new Set(todos.map((c) => c.resp).filter((x): x is string => !!x))].sort()
@@ -39,7 +39,7 @@ export default async function Kanban({ searchParams }: { searchParams: Promise<{
     <>
       <Cabecalho sobre="Estratégia" titulo="Kanban de execução"
         texto="Todas as ações num só quadro: campanhas de captação, ciclos PDCA e tarefas avulsas. Arraste o cartão ou use os botões. A coluna Feito é o caminho já percorrido."
-        acoes={<details className="inline"><summary className="btn">Nova tarefa</summary>
+        acoes={pode(s, 'kanban', 'editar') && <details className="inline"><summary className="btn">Nova tarefa</summary>
           <Formulario acao={salvarTarefa} enviar="Criar tarefa">
             <label className="f full">O que fazer<input type="text" name="titulo" required minLength={3} maxLength={160} /></label>
             <label className="f">Origem<select name="origem" defaultValue="Geral"><option>Geral</option><option>Manutenção</option><option>Captação</option><option>PDCA</option></select></label>

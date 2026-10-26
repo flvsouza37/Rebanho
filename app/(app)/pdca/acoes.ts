@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from '@/lib/z'
-import { exigir } from '@/lib/sessao'
+import { exigir, exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { hoje, msgErro } from '@/lib/formato'
 import { FASES, FASEN } from '@/lib/estrategia'
@@ -16,7 +16,7 @@ const data = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).transform
 const texto = (max: number) => z.string().trim().max(max).transform((x) => x || null)
 
 async function ciclo(id: string) {
-  await exigir(['pastor', 'secretaria'])
+  await exigirAcesso('pdca', 'editar')
   const supabase = await supabaseServidor()
   const { data: p } = await supabase.from('pdca').select('*').eq('id', id).maybeSingle()
   return { supabase, p }

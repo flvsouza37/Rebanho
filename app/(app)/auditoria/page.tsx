@@ -1,4 +1,4 @@
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { NOME_PAPEL, type Papel } from '@/lib/perfis'
 import { Cabecalho } from '@/components/Cabecalho'
@@ -10,7 +10,7 @@ const curto = (v: unknown) => v === null || v === undefined || v === '' ? '—' 
 
 // A trilha é gravada pelo próprio banco (triggers) e não pode ser editada nem apagada.
 export default async function Auditoria({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
-  const s = await exigir(['pastor', 'tesouraria'])
+  const s = await exigirAcesso(['auditoria', 'financeiro'])
   const { t } = await searchParams
   const supabase = await supabaseServidor()
   let q = supabase.from('auditoria').select('*').eq('igreja_id', s.igreja.id).order('quando', { ascending: false }).limit(300)

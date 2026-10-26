@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { exigir } from '@/lib/sessao'
+import { sessao } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { brl, dataBR, nomeMes } from '@/lib/formato'
 import { Imprimir } from '@/components/Imprimir'
@@ -7,7 +7,7 @@ import { Imprimir } from '@/components/Imprimir'
 export const metadata = { title: 'Recibo' }
 
 export default async function Recibo({ params }: { params: Promise<{ id: string }> }) {
-  const s = await exigir(['pastor', 'tesouraria', 'membro'])
+  const s = await sessao()
   const { id } = await params
   const supabase = await supabaseServidor()
   const { data: c } = await supabase.from('contribuicoes').select('*, pessoas(nome)').eq('id', id).maybeSingle()

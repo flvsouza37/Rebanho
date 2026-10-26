@@ -12,7 +12,7 @@ export default async function AreaLogada({ children }: { children: React.ReactNo
       <aside className="rail" id="rail">
         <div className="brand"><Marca /><div><b>Rebanho</b><small>CRM para igrejas</small></div></div>
         <div className="igreja-atual"><b>{s.igreja.nome}</b>{NOME_PAPEL[s.papel]} · {s.email}</div>
-        <Suspense><Menu papel={s.papel} /></Suspense>
+        <Suspense><Menu papel={s.papel} acessos={s.acessos} temFicha={!!s.pessoaId} /></Suspense>
         <div className="perfilbox">
           {s.outras.length > 0 && (
             <form action={trocarIgreja} className="trocar">

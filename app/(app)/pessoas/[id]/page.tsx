@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { brl, dataBR } from '@/lib/formato'
-import { podeCadastrar, podeFin } from '@/lib/perfis'
 import { Cabecalho } from '@/components/Cabecalho'
 import { Formulario } from '@/components/Formulario'
 import { salvarConsentimento, salvarPastoral, salvarCompromisso, anonimizarPessoa } from '../acoes'
@@ -16,13 +15,13 @@ function Kv({ itens }: { itens: [string, React.ReactNode][] }) {
 }
 
 export default async function Ficha({ params }: { params: Promise<{ id: string }> }) {
-  const s = await exigir(['pastor', 'tesouraria', 'secretaria', 'lider'])
+  const s = await exigirAcesso('pessoas')
   const { id } = await params
   const supabase = await supabaseServidor()
   const { data: p } = await supabase.from('pessoas').select('*').eq('id', id).maybeSingle()
   if (!p) notFound()
-  const pastor = s.papel === 'pastor', fin = podeFin(s.papel)
-  const verCamp = ['pastor', 'secretaria', 'lider'].includes(s.papel) && !!p.campanha_id
+  const pastor = s.papel === 'pastor', fin = pode(s, 'financeiro')
+  const verCamp = pode(s, 'missao') && !!p.campanha_id
   const [{ data: pastoral }, { data: comp }, { data: contribs }, { data: camp }] = await Promise.all([
     pastor ? supabase.from('pessoas_pastoral').select('*').eq('pessoa_id', id).maybeSingle() : Promise.resolve({ data: null }),
     fin ? supabase.from('compromissos').select('*').eq('pessoa_id', id).maybeSingle() : Promise.resolve({ data: null }),
@@ -34,7 +33,7 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
     <>
       <Cabecalho sobre={'Pessoas · ' + p.status} titulo={p.nome}
         acoes={<>
-          {podeCadastrar(s.papel) && !p.anonimizado && <Link className="btn" href={`/pessoas/${id}/editar`}>Editar ficha</Link>}
+          {pode(s, 'pessoas', 'editar') && !p.anonimizado && <Link className="btn" href={`/pessoas/${id}/editar`}>Editar ficha</Link>}
           {(pastor || s.papel === 'secretaria') && <a className="btn ghost" href={`/pessoas/${id}/exportar`}>Exportar dados (LGPD)</a>}
         </>} />
       {p.anonimizado && <div className="banner warn">Cadastro anonimizado a pedido do titular. Restou só o histórico financeiro.</div>}

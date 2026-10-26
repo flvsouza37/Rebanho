@@ -1,4 +1,4 @@
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso } from '@/lib/sessao'
 import { PERFIL, ehPerfil } from '@/lib/territorio'
 import { Cabecalho } from '@/components/Cabecalho'
 import { Formulario } from '@/components/Formulario'
@@ -11,7 +11,7 @@ const somaDias = (n: number) => new Date(Date.now() + n * 864e5).toLocaleDateStr
 
 // Vinda do território, a campanha já chega com o bairro, o perfil, as ações e o convite sugeridos.
 export default async function Nova({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const s = await exigir(['pastor', 'secretaria'])
+  const s = await exigirAcesso('missao', 'editar')
   const sp = await searchParams
   const perfil = ehPerfil(sp.perfil) ? sp.perfil : 'misto'
   return (

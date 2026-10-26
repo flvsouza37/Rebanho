@@ -1,8 +1,7 @@
 import Link from 'next/link'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { dataBR } from '@/lib/formato'
-import { podeCadastrar } from '@/lib/perfis'
 import { Cabecalho } from '@/components/Cabecalho'
 
 export const metadata = { title: 'Pessoas' }
@@ -16,7 +15,7 @@ const FILTROS: Record<string, { nome: string; status: string[] }> = {
 }
 
 export default async function Pessoas({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const s = await exigir(['pastor', 'tesouraria', 'secretaria', 'lider'])
+  const s = await exigirAcesso('pessoas')
   const { s: grupo = 'membros', f, q } = await searchParams
   const filtro = FILTROS[grupo] ?? FILTROS.membros
   const supabase = await supabaseServidor()
@@ -36,7 +35,7 @@ export default async function Pessoas({ searchParams }: { searchParams: Promise<
   return (
     <>
       <Cabecalho sobre="Pessoas" titulo={filtro.nome} texto={`${pessoas?.length ?? 0} pessoa(s)${destaque ? ' · ' + destaque : ''}`}
-        acoes={podeCadastrar(s.papel) && <Link className="btn" href={`/pessoas/nova?status=${vis ? 'visitante' : 'membro'}`}>{vis ? 'Novo visitante' : 'Nova pessoa'}</Link>} />
+        acoes={pode(s, 'pessoas', 'editar') && <Link className="btn" href={`/pessoas/nova?status=${vis ? 'visitante' : 'membro'}`}>{vis ? 'Novo visitante' : 'Nova pessoa'}</Link>} />
       {destaque && <div className="banner">Você veio do painel: mostrando só “{destaque.toLowerCase()}”. <Link href={`/pessoas?s=${grupo}`}>Ver todos</Link></div>}
       <div className="tabs">
         {Object.entries(FILTROS).map(([k, v]) => (

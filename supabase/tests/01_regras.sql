@@ -222,4 +222,41 @@ select pg_temp.igual((select count(*) from diagnosticos)::int + (select count(*)
 select pg_temp.erro(format($$insert into pdca (igreja_id, titulo, tipo, chave, diagnostico_id) values (%L, 'Da B', 'ameaca', 'b', %L)$$, :'ig_b', :'dg_a'), 'não pertence');
 reset role;
 
+-- Acessos decididos pelo pastor
+select pg_temp.como('00000000-0000-0000-0000-0000000000a4');
+select pg_temp.erro(format($$select definir_acessos(%L, %L, '{"diagnostico":"editar"}')$$, :'ig_a', '00000000-0000-0000-0000-0000000000a4'), 'Só o pastor');
+update vinculos set acessos = '{"diagnostico":"editar"}' where user_id = '00000000-0000-0000-0000-0000000000a4';
+select pg_temp.igual((select nivel_em(:'ig_a', 'diagnostico')), 'nenhum', 'líder não muda os próprios acessos');
+select pg_temp.igual((select meus_acessos(:'ig_a') ->> 'kanban'), 'editar', 'líder recebe o padrão do perfil');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.erro(format($$select definir_acessos(%L, %L, '{"xyz":"ver"}')$$, :'ig_a', '00000000-0000-0000-0000-0000000000a4'), 'Módulo desconhecido');
+select pg_temp.erro(format($$select definir_acessos(%L, %L, '{"pdca":"tudo"}')$$, :'ig_a', '00000000-0000-0000-0000-0000000000a4'), 'Nível inválido');
+select pg_temp.erro(format($$select definir_acessos(%L, %L, '{"pdca":"ver"}')$$, :'ig_a', '00000000-0000-0000-0000-0000000000a1'), 'o pastor já vê tudo');
+select definir_acessos(:'ig_a', '00000000-0000-0000-0000-0000000000a4', '{"diagnostico":"ver","pdca":"editar","kanban":"ver","pessoas":"nenhum","pastoral":"ver"}');
+select definir_acessos(:'ig_a', '00000000-0000-0000-0000-0000000000a2', '{"financeiro":"ver","pessoas":"ver"}');
+select pg_temp.igual((select (acessos ->> 'pdca') from equipe(:'ig_a') where email = 'lider@a'), 'editar', 'equipe mostra o acesso escolhido');
+select pg_temp.igual((select (acessos ->> 'missao') from equipe(:'ig_a') where email = 'lider@a'), 'ver', 'módulo não marcado segue o padrão');
+insert into pessoas_pastoral (pessoa_id, igreja_id, observacao) values ('11111111-0000-0000-0000-000000000001', :'ig_a', 'Luto na família');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a4');
+select pg_temp.igual((select count(*) from diagnosticos)::int, 1, 'líder liberado passa a ver o diagnóstico');
+update diagnosticos set titulo = 'Mudado pelo líder';
+select pg_temp.igual((select count(*) from diagnosticos where titulo = 'Mudado pelo líder')::int, 0, 'só ver não deixa editar');
+update pdca set fase = 'D' where chave = 'ins-x' and fase = 'P';
+select pg_temp.igual((select count(*) from pdca where fase = 'D')::int, 1, 'líder com editar no PDCA avança o ciclo');
+update tarefas set coluna = 'feito' where id = :'tk_a';
+select pg_temp.igual((select coluna from tarefas where id = :'tk_a'), 'fazendo', 'kanban só para ver não move tarefa');
+select pg_temp.igual((select count(*) from pessoas)::int, 0, 'líder sem acesso a pessoas não vê ninguém');
+select pg_temp.igual((select count(*) from pessoas_pastoral)::int, 1, 'pastor pode liberar a leitura das notas pastorais');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.erro(format($$insert into lancamentos (igreja_id, tipo, valor, data, categoria) values (%L, 'entrada', 10, current_date, 'Oferta')$$, :'ig_a'), 'row-level security');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+select adicionar_acesso(:'ig_a', 'lider@a', 'secretaria');
+select pg_temp.igual((select (acessos ->> 'pessoas') from equipe(:'ig_a') where email = 'lider@a'), 'editar', 'trocar o perfil volta ao padrão do novo perfil');
+select adicionar_acesso(:'ig_a', 'lider@a', 'lider');
+reset role;
+
 \echo 'TODOS OS TESTES PASSARAM'

@@ -1,4 +1,4 @@
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso } from '@/lib/sessao'
 import { Cabecalho } from '@/components/Cabecalho'
 import { Formulario } from '@/components/Formulario'
 import { CamposPessoa } from '../CamposPessoa'
@@ -9,7 +9,7 @@ import { campanhasAbertas } from '../campanhas'
 export const metadata = { title: 'Nova pessoa' }
 
 export default async function Nova({ searchParams }: { searchParams: Promise<{ status?: string; campanha?: string }> }) {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
+  const s = await exigirAcesso('pessoas', 'editar')
   const { status = 'visitante', campanha } = await searchParams
   const campanhas = await campanhasAbertas(s.igreja.id, campanha)
   return (

@@ -284,3 +284,13 @@ details.inline[open]{padding:10px;border:1px solid var(--line);border-radius:8px
 .card:target{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 button.chk{font:inherit;cursor:pointer;background:transparent}
 @media (max-width:760px){.kanban{grid-template-columns:repeat(4,minmax(78vw,1fr))}}
+
+/* Grade de acessos da equipe */
+table.acessos { width: 100%; }
+table.acessos th[scope], table.acessos tbody th { text-align: left; font-weight: 400; }
+table.acessos tbody th { text-transform: none; letter-spacing: 0; background: none; font-size: 14px; color: var(--fg); }
+table.acessos tbody th b { display: block; font-weight: 600; }
+table.acessos tbody th .small { display: block; }
+table.acessos td, table.acessos thead th:not(:first-child) { text-align: center; width: 72px; }
+table.acessos input[type=radio] { width: 20px; height: 20px; accent-color: var(--accent); }
+@media (max-width: 560px) { table.acessos td, table.acessos thead th:not(:first-child) { width: 44px; font-size: 11px; padding-left: 2px; padding-right: 2px; } table.acessos tbody th .small { display: none; } }

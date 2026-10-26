@@ -4,35 +4,61 @@ export const NOME_PAPEL: Record<Papel, string> = {
   pastor: 'Pastor', tesouraria: 'Tesouraria', secretaria: 'Secretaria', lider: 'Líder de célula', membro: 'Membro',
 }
 
+export type Modulo = 'pessoas' | 'pastoral' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'financeiro' | 'auditoria' | 'ouvidoria'
+export type Nivel = 'nenhum' | 'ver' | 'editar'
+export type Acessos = Record<Modulo, Nivel>
+
+// Módulos que o pastor libera na tela Equipe. A lista e o padrão de cada perfil moram no banco (modulos, acesso_padrao).
+export const MODULOS: [Modulo, string, string][] = [
+  ['pessoas', 'Membros e visitantes', 'fichas, funil de visitantes, consentimento LGPD'],
+  ['pastoral', 'Anotações pastorais', 'observações sigilosas e eventos de vida'],
+  ['missao', 'Missão', 'marketing evangelístico e campanhas'],
+  ['diagnostico', 'Diagnóstico', 'Análise MUDA, Matriz Diakonia e insights'],
+  ['pdca', 'Ciclos PDCA', 'planejar, executar, verificar e agir'],
+  ['kanban', 'Kanban de execução', 'tarefas e andamento das ações'],
+  ['financeiro', 'Tesouraria e contribuições', 'lançamentos, baixas, recibos e fechamento'],
+  ['auditoria', 'Auditoria completa', 'histórico de tudo o que foi alterado'],
+  ['ouvidoria', 'Ouvidoria', 'ler e responder sugestões e reclamações de todos'],
+]
+export const NOME_NIVEL: Record<Nivel, string> = { nenhum: 'Sem acesso', ver: 'Ver', editar: 'Ver e editar' }
+
+type Item = { href: string; nome: string; m?: Modulo[]; so?: 'pastor' | 'membro' | 'equipe' }
 // O menu só esconde o que o banco já nega: a regra de verdade está nas políticas RLS.
-export const MENU: { grupo: string; itens: { href: string; nome: string; papeis: Papel[] }[] }[] = [
-  { grupo: 'Visão geral', itens: [{ href: '/painel', nome: 'Painel', papeis: ['pastor', 'tesouraria', 'secretaria', 'lider'] }] },
+export const MENU: { grupo: string; itens: Item[] }[] = [
+  { grupo: 'Visão geral', itens: [{ href: '/painel', nome: 'Painel', so: 'equipe' }] },
   { grupo: 'Pessoas', itens: [
-    { href: '/pessoas?s=membros', nome: 'Membros', papeis: ['pastor', 'tesouraria', 'secretaria', 'lider'] },
-    { href: '/pessoas?s=visitante', nome: 'Visitantes', papeis: ['pastor', 'secretaria', 'lider'] },
+    { href: '/pessoas?s=membros', nome: 'Membros', m: ['pessoas'] },
+    { href: '/pessoas?s=visitante', nome: 'Visitantes', m: ['pessoas'] },
   ] },
   { grupo: 'Missão', itens: [
-    { href: '/alcance', nome: 'Marketing evangelístico', papeis: ['pastor', 'secretaria', 'lider'] },
-    { href: '/campanhas', nome: 'Campanhas', papeis: ['pastor', 'secretaria', 'lider'] },
+    { href: '/alcance', nome: 'Marketing evangelístico', m: ['missao'] },
+    { href: '/campanhas', nome: 'Campanhas', m: ['missao'] },
   ] },
   { grupo: 'Estratégia', itens: [
-    { href: '/diagnostico', nome: 'Diagnóstico MUDA e Diakonia', papeis: ['pastor', 'secretaria'] },
-    { href: '/pdca', nome: 'Ciclos PDCA', papeis: ['pastor', 'secretaria', 'lider'] },
-    { href: '/kanban', nome: 'Kanban de execução', papeis: ['pastor', 'secretaria', 'lider'] },
+    { href: '/diagnostico', nome: 'Diagnóstico MUDA e Diakonia', m: ['diagnostico'] },
+    { href: '/pdca', nome: 'Ciclos PDCA', m: ['pdca'] },
+    { href: '/kanban', nome: 'Kanban de execução', m: ['kanban'] },
   ] },
   { grupo: 'Gestão', itens: [
-    { href: '/tesouraria', nome: 'Tesouraria', papeis: ['pastor', 'tesouraria'] },
-    { href: '/contribuicoes', nome: 'Contribuições', papeis: ['pastor', 'tesouraria'] },
-    { href: '/auditoria', nome: 'Auditoria', papeis: ['pastor', 'tesouraria'] },
+    { href: '/tesouraria', nome: 'Tesouraria', m: ['financeiro'] },
+    { href: '/contribuicoes', nome: 'Contribuições', m: ['financeiro'] },
+    { href: '/auditoria', nome: 'Auditoria', m: ['auditoria', 'financeiro'] },
   ] },
-  { grupo: 'Comunidade', itens: [{ href: '/ouvidoria', nome: 'Sugestões e reclamações', papeis: ['pastor', 'tesouraria', 'secretaria', 'lider', 'membro'] }] },
+  { grupo: 'Comunidade', itens: [{ href: '/ouvidoria', nome: 'Sugestões e reclamações' }] },
   { grupo: 'Administração', itens: [
-    { href: '/equipe', nome: 'Equipe e acessos', papeis: ['pastor'] },
-    { href: '/igreja', nome: 'Dados da igreja', papeis: ['pastor'] },
+    { href: '/equipe', nome: 'Equipe e acessos', so: 'pastor' },
+    { href: '/igreja', nome: 'Dados da igreja', so: 'pastor' },
   ] },
-  { grupo: 'Área do membro', itens: [{ href: '/minha-area', nome: 'Minha área', papeis: ['membro'] }] },
+  { grupo: 'Área do membro', itens: [{ href: '/minha-area', nome: 'Minha área', so: 'membro' }] },
 ]
 
-export const podeFin = (p: Papel) => p === 'pastor' || p === 'tesouraria'
-export const podeCadastrar = (p: Papel) => p === 'pastor' || p === 'secretaria' || p === 'lider'
-export const inicioDo = (p: Papel) => (p === 'membro' ? '/minha-area' : '/painel')
+export const nivelOk = (tem: Nivel | undefined, quer: 'ver' | 'editar') => tem === 'editar' || (quer === 'ver' && tem === 'ver')
+export const temEquipe = (a: Acessos) => Object.values(a).some((n) => n !== 'nenhum')
+export function vePagina(i: Item, papel: Papel, a: Acessos, temFicha: boolean) {
+  if (i.so === 'pastor') return papel === 'pastor'
+  if (i.so === 'membro') return temFicha
+  if (i.so === 'equipe') return papel === 'pastor' || temEquipe(a)
+  return !i.m || i.m.some((m) => nivelOk(a[m], 'ver'))
+}
+
+export const inicioDo = (papel: Papel, a: Acessos) => (papel === 'pastor' || temEquipe(a) ? '/painel' : '/minha-area')

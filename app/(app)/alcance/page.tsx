@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { brl } from '@/lib/formato'
 import { PERFIL, CANAIS, analisar, quantil, semAcento, numBR, type Analise, type Microarea } from '@/lib/territorio'
@@ -47,11 +47,11 @@ function Mapa({ lista, sel, link }: { lista: Analise[]; sel: string; link: (m: s
 }
 
 export default async function Alcance({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
+  const s = await exigirAcesso('missao')
   const sp = await searchParams
   const supabase = await supabaseServidor()
   const uf = UFS.includes((sp.uf ?? '').toUpperCase()) ? sp.uf!.toUpperCase() : (s.igreja.uf ?? '').toUpperCase()
-  const podeCriar = s.papel !== 'lider'
+  const podeCriar = pode(s, 'missao', 'editar')
 
   const { data: munsUf } = uf ? await supabase.from('microareas').select('municipio').eq('uf', uf).limit(2000) : { data: [] }
   const municipios = [...new Set((munsUf ?? []).map((m) => m.municipio))].sort((a, b) => a.localeCompare(b, 'pt-BR'))

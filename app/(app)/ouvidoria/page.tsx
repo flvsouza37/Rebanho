@@ -1,4 +1,4 @@
-import { sessao } from '@/lib/sessao'
+import { pode, sessao } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { dataBR } from '@/lib/formato'
 import { Cabecalho } from '@/components/Cabecalho'
@@ -12,7 +12,7 @@ export default async function Ouvidoria() {
   const supabase = await supabaseServidor()
   // O banco devolve tudo para o pastor e só as próprias para os demais.
   const { data } = await supabase.from('ouvidoria').select('*').eq('igreja_id', s.igreja.id).order('criado_em', { ascending: false }).limit(200)
-  const pastor = s.papel === 'pastor'
+  const pastor = pode(s, 'ouvidoria'), responde = pode(s, 'ouvidoria', 'editar')
   return (
     <>
       <Cabecalho sobre="Comunidade" titulo="Sugestões e reclamações" texto={pastor ? 'Todas as manifestações da igreja. Reclamações e pedidos de cuidado pedem resposta em até 72 horas.' : 'Fale direto com a liderança. Só o pastor lê.'} />
@@ -25,7 +25,7 @@ export default async function Ouvidoria() {
                 <span className="small muted">{o.tipo} · {dataBR(o.criado_em)} · {o.anonimo ? 'anônimo' : o.autor_nome || 'sem nome'} · {o.status}</span>
                 <p className="small">{o.texto}</p>
                 {o.resposta && <p className="small"><b>Resposta:</b> {o.resposta}</p>}
-                {pastor && <details className="inline"><summary className="btn ghost sm">Responder</summary>
+                {responde && <details className="inline"><summary className="btn ghost sm">Responder</summary>
                   <Formulario acao={responder.bind(null, o.id)} enviar="Salvar resposta" className="grid">
                     <label className="f">Situação<select name="status" defaultValue={o.status}><option>Em análise</option><option>Respondida</option><option>Encerrada</option></select></label>
                     <label className="f">Resposta<textarea name="resposta" defaultValue={o.resposta ?? ''} /></label>

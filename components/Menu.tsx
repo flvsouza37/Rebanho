@@ -2,14 +2,14 @@
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { MENU, type Papel } from '@/lib/perfis'
+import { MENU, vePagina, type Acessos, type Papel } from '@/lib/perfis'
 
 // Grupos recolhíveis: um aberto por vez; o grupo da tela atual abre sozinho.
-export function Menu({ papel }: { papel: Papel }) {
+export function Menu({ papel, acessos, temFicha }: { papel: Papel; acessos: Acessos; temFicha: boolean }) {
   const caminho = usePathname()
   const busca = useSearchParams()
   const atual = caminho + (busca.toString() ? '?' + busca.toString() : '')
-  const grupos = MENU.map((g) => ({ ...g, itens: g.itens.filter((i) => i.papeis.includes(papel)) })).filter((g) => g.itens.length)
+  const grupos = MENU.map((g) => ({ ...g, itens: g.itens.filter((i) => vePagina(i, papel, acessos, temFicha)) })).filter((g) => g.itens.length)
   const ativo = (href: string) => {
     const [p, q] = href.split('?')
     return q ? atual === href || (caminho.startsWith(p) && busca.toString() === q) : caminho === p || caminho.startsWith(p + '/')

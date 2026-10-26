@@ -1,4 +1,4 @@
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { hoje, brl } from '@/lib/formato'
 import { Cabecalho } from '@/components/Cabecalho'
@@ -9,7 +9,7 @@ import { CAT_E, CAT_S } from '@/lib/categorias'
 export const metadata = { title: 'Novo lançamento' }
 
 export default async function Novo({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
-  const s = await exigir(['pastor', 'tesouraria'])
+  const s = await exigirAcesso('financeiro', 'editar')
   const { tipo: t } = await searchParams
   const tipo = t === 'saida' ? 'saida' : 'entrada'
   const supabase = await supabaseServidor()

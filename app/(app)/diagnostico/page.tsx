@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { dataBR } from '@/lib/formato'
 import { carregarEstrategia } from '@/lib/estrategia-dados'
 import { GRUPOS, GN, PROPOS, PN, LADOS, NOTA, cel, lacuna, insights, evidencia, grauDe, type Diagnostico, type GrupoId, type Insight, type PropId, type Lado } from '@/lib/estrategia'
@@ -49,7 +49,8 @@ function CamposItem({ t = '', imp = 3, at = 3 }: { t?: string; imp?: number; at?
 }
 
 export default async function DiagnosticoPagina({ searchParams }: { searchParams: Promise<{ aba?: string; cel?: string; todas?: string; erro?: string }> }) {
-  const s = await exigir(['pastor', 'secretaria'])
+  const s = await exigirAcesso('diagnostico')
+  const edita = pode(s, 'diagnostico', 'editar'), fazPdca = pode(s, 'pdca', 'editar'), fazTarefa = pode(s, 'kanban', 'editar')
   const sp = await searchParams
   const aba = ABAS.some((a) => a[0] === sp.aba) ? sp.aba! : 'muda'
   const { diags, atual: d, anterior: ant, ctx } = await carregarEstrategia(s.igreja.id)
@@ -61,7 +62,7 @@ export default async function DiagnosticoPagina({ searchParams }: { searchParams
   const cab = (
     <Cabecalho sobre="Estratégia" titulo="Diagnóstico ministerial"
       texto="A Análise MUDA compara o que cada grupo deseja com o que precisa. A Matriz Diakonia mostra como cada grupo serve e é servido nos cinco propósitos. Ao concluir, o sistema gera ameaças e boas práticas que entram no PDCA e no kanban."
-      acoes={<>
+      acoes={edita && <>
         {d && d.status !== 'Concluído' && <form action={concluirDiagnostico.bind(null, d.id)}><button className="btn" type="submit">Concluir e gerar insights</button></form>}
         <form action={novoDiagnostico}><button className={d ? 'btn ghost' : 'btn'} type="submit">{d ? 'Novo ciclo de diagnóstico' : 'Começar diagnóstico'}</button></form>
       </>} />
@@ -69,7 +70,7 @@ export default async function DiagnosticoPagina({ searchParams }: { searchParams
   if (!d) return <>{cab}{sp.erro && <div className="erro" role="alert">{sp.erro}</div>}<div className="empty">Nenhum diagnóstico ainda. Use “Começar diagnóstico”: a estrutura das duas ferramentas já vem montada.</div></>
 
   const [cp, cg, cl] = (sp.cel ?? '').split('|') as [PropId, GrupoId, Lado]
-  const celAtual = cp && cg && cl && PN[cp] && GN[cg] ? cel(d, cp, cg, cl) : null
+  const celAtual = edita && cp && cg && cl && PN[cp] && GN[cg] ? cel(d, cp, cg, cl) : null
   const am = L.filter((x) => x.tipo === 'ameaca'), pr = L.filter((x) => x.tipo === 'pratica')
 
   const Card = ({ x }: { x: Insight }) => {
@@ -83,9 +84,9 @@ export default async function DiagnosticoPagina({ searchParams }: { searchParams
           <div className="row small"><span className="pill">{x.origem}</span>{x.tipo === 'ameaca' && <span className={`pill ${g.k}`}>{g.n}</span>}<span className="muted">Área: {x.area}</span></div>
           <div className="row">
             {pd ? <Link className="btn ghost sm" href={`/pdca#pd-${pd.id}`}>Ver PDCA</Link>
-              : <form action={abrirPdca.bind(null, x.id)}><button className="btn sm" type="submit">{x.tipo === 'pratica' ? 'Re-testar no PDCA' : 'Abrir PDCA'}</button></form>}
-            <form action={tarefaDoInsight.bind(null, x.id)}><button className="btn ghost sm" type="submit">Tarefa no kanban</button></form>
-            {x.captar && <Link className="btn ghost sm" href="/alcance">Criar campanha</Link>}
+              : fazPdca && <form action={abrirPdca.bind(null, x.id)}><button className="btn sm" type="submit">{x.tipo === 'pratica' ? 'Re-testar no PDCA' : 'Abrir PDCA'}</button></form>}
+            {fazTarefa && <form action={tarefaDoInsight.bind(null, x.id)}><button className="btn ghost sm" type="submit">Tarefa no kanban</button></form>}
+            {x.captar && pode(s, 'missao', 'editar') && <Link className="btn ghost sm" href="/alcance">Criar campanha</Link>}
             {x.campanha && <Link className="btn ghost sm" href={`/campanhas/${x.campanha}`}>Ver campanha</Link>}
           </div>
         </div>
@@ -120,20 +121,20 @@ export default async function DiagnosticoPagina({ searchParams }: { searchParams
                           <div className="body">
                             <div className="spread" style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}><b>{it.t}</b><span className="score" title="Lacuna de 0 a 20">{gap}</span></div>
                             <span className="small muted">importância {it.imp} · atendimento {it.at}{a && a.at !== it.at ? ` (antes ${a.at})` : ''}</span>
-                            <details className="inline"><summary className="small">Editar</summary>
+                            {edita && <details className="inline"><summary className="small">Editar</summary>
                               <Formulario acao={salvarItem.bind(null, d.id, g, k, i)} enviar="Salvar item" extra={<button className="btn ghost sm" formAction={removerItem.bind(null, d.id, g, k, i)} formNoValidate>Remover</button>}>
                                 <CamposItem t={it.t} imp={it.imp} at={it.at} />
                               </Formulario>
-                            </details>
+                            </details>}
                           </div>
                         </div>
                       )
                     })}
                     {!(d.muda?.[g]?.[k] ?? []).length && <div className="empty small">Nenhum item.</div>}
                   </div>
-                  <details className="inline"><summary className="small">Adicionar {k === 'exp' ? 'expectativa' : 'demanda'}</summary>
+                  {edita && <details className="inline"><summary className="small">Adicionar {k === 'exp' ? 'expectativa' : 'demanda'}</summary>
                     <Formulario acao={salvarItem.bind(null, d.id, g, k, null)} enviar="Adicionar"><CamposItem /></Formulario>
-                  </details>
+                  </details>}
                 </div>
               ))}
             </div>
@@ -167,9 +168,13 @@ export default async function DiagnosticoPagina({ searchParams }: { searchParams
                     const c = cel(d, p, g, l), a = cel(ant, p, g, l).n
                     return (
                       <td key={g + l}>
-                        <Link className={`hcel ${faixa(c.n)}`} href={`/diagnostico?aba=diakonia&cel=${p}|${g}|${l}#editar`} aria-label={`${pn}, ${GN[g]}, ${l === 'serve' ? 'como serve' : 'como é servido'}: nota ${c.n ?? 'sem nota'}`}>
-                          <b className="mono">{c.n ?? '·'}{a != null && c.n != null && a !== c.n && <small>{c.n > a ? '▲' : '▼'}{a}</small>}</b><span>{c.t}</span>
-                        </Link>
+                        {(() => {
+                          const dentro = <><b className="mono">{c.n ?? '·'}{a != null && c.n != null && a !== c.n && <small>{c.n > a ? '▲' : '▼'}{a}</small>}</b><span>{c.t}</span></>
+                          const rot = `${pn}, ${GN[g]}, ${l === 'serve' ? 'como serve' : 'como é servido'}: nota ${c.n ?? 'sem nota'}`
+                          return edita
+                            ? <Link className={`hcel ${faixa(c.n)}`} href={`/diagnostico?aba=diakonia&cel=${p}|${g}|${l}#editar`} aria-label={rot}>{dentro}</Link>
+                            : <div className={`hcel ${faixa(c.n)}`} aria-label={rot}>{dentro}</div>
+                        })()}
                       </td>
                     )
                   }))}

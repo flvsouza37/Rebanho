@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { brl, dataBR } from '@/lib/formato'
 import { CANAIS, PERFIL, perfilDe, numBR } from '@/lib/territorio'
@@ -12,7 +12,7 @@ import { salvarCampanha, mudarStatus, excluirCampanha } from '../acoes'
 export const metadata = { title: 'Campanha' }
 
 export default async function Campanha({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ erro?: string }> }) {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
+  const s = await exigirAcesso('missao')
   const { id } = await params
   const { erro } = await searchParams
   const supabase = await supabaseServidor()
@@ -21,7 +21,7 @@ export default async function Campanha({ params, searchParams }: { params: Promi
     supabase.from('pessoas').select('id, nome, status, etapa, primeira_visita, ultimo_contato').eq('campanha_id', id).eq('anonimizado', false).order('primeira_visita', { ascending: false }),
   ])
   if (!c) notFound()
-  const edita = s.papel !== 'lider'
+  const edita = pode(s, 'missao', 'editar')
   const P = PERFIL[perfilDe(c.perfil)]
   const lista = pessoas ?? []
   const integrados = lista.filter((p) => p.status === 'congregado' || p.status === 'membro').length

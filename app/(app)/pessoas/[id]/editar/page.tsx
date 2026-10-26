@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { Cabecalho } from '@/components/Cabecalho'
 import { Formulario } from '@/components/Formulario'
@@ -10,7 +10,7 @@ import { campanhasAbertas } from '../../campanhas'
 export const metadata = { title: 'Editar ficha' }
 
 export default async function Editar({ params }: { params: Promise<{ id: string }> }) {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
+  const s = await exigirAcesso('pessoas', 'editar')
   const { id } = await params
   const supabase = await supabaseServidor()
   const { data: p } = await supabase.from('pessoas').select('*').eq('id', id).maybeSingle()

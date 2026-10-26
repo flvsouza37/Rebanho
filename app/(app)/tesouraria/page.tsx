@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { brl, dataBR, fimDoMes, mesAnterior, mesAtual, nomeMes } from '@/lib/formato'
 import { Cabecalho } from '@/components/Cabecalho'
@@ -12,7 +12,8 @@ type L = { id: string; tipo: 'entrada' | 'saida'; valor: number; data: string; c
 const vale = (l: L) => l.status === 'ok' && !l.estorno_de && !l.estornado_por
 
 export default async function Tesouraria({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const s = await exigir(['pastor', 'tesouraria'])
+  const s = await exigirAcesso('financeiro')
+  const edita = pode(s, 'financeiro', 'editar')
   const sp = await searchParams
   const mes = /^\d{4}-\d{2}$/.test(sp.mes ?? '') ? sp.mes! : mesAtual()
   const tipo = sp.tipo === 'entrada' || sp.tipo === 'saida' ? sp.tipo : null
@@ -36,7 +37,7 @@ export default async function Tesouraria({ searchParams }: { searchParams: Promi
   return (
     <>
       <Cabecalho sobre="Gestão" titulo="Tesouraria" texto="Nada é apagado: erro se corrige com estorno. Saídas acima da alçada esperam o pastor. Mês fechado não aceita lançamento."
-        acoes={<><Link className="btn" href="/tesouraria/novo?tipo=entrada">Nova entrada</Link><Link className="btn ghost" href="/tesouraria/novo?tipo=saida">Nova saída</Link></>} />
+        acoes={edita && <><Link className="btn" href="/tesouraria/novo?tipo=entrada">Nova entrada</Link><Link className="btn ghost" href="/tesouraria/novo?tipo=saida">Nova saída</Link></>} />
       {sp.aviso === 'pendente' && <div className="banner warn">Saída acima de {brl(s.igreja.alcada)}: foi enviada ao pastor para aprovação e ainda não entra no caixa.</div>}
       <form className="row" action="/tesouraria">
         <select name="mes" defaultValue={mes} style={{ width: 'auto' }}>{meses.map((m) => <option key={m} value={m}>{nomeMes(m)}</option>)}</select>
@@ -47,7 +48,7 @@ export default async function Tesouraria({ searchParams }: { searchParams: Promi
         {fech ? <>
           <span className="pill ok">Mês fechado em {dataBR(fech.fechado_em)}</span>
           {s.papel === 'pastor' && <form action={reabrirMes.bind(null, mes)}><button className="btn ghost sm" type="submit">Reabrir</button></form>}
-        </> : mes < mesAtual() ? <form action={fecharMes.bind(null, mes)}><button className="btn ghost sm" type="submit">Fechar {nomeMes(mes)}</button></form>
+        </> : !edita ? null : mes < mesAtual() ? <form action={fecharMes.bind(null, mes)}><button className="btn ghost sm" type="submit">Fechar {nomeMes(mes)}</button></form>
           : <span className="small muted">O mês corrente só pode ser fechado depois que terminar.</span>}
       </div>
 
@@ -86,8 +87,8 @@ export default async function Tesouraria({ searchParams }: { searchParams: Promi
                 </td>
                 <td>{l.categoria}</td><td>{l.fundo}</td>
                 <td className="num mono" style={{ color: l.tipo === 'saida' ? 'var(--crit)' : 'var(--ok)' }}>{l.tipo === 'saida' ? '−' : '+'} {brl(l.valor)}</td>
-                <td><form action={conciliar.bind(null, l.id, !l.conciliado)}><button className="btn ghost sm" type="submit">{l.conciliado ? 'Sim' : 'Não'}</button></form></td>
-                <td>{vale(l) && (
+                <td>{edita ? <form action={conciliar.bind(null, l.id, !l.conciliado)}><button className="btn ghost sm" type="submit">{l.conciliado ? 'Sim' : 'Não'}</button></form> : l.conciliado ? 'Sim' : 'Não'}</td>
+                <td>{edita && vale(l) && (
                   <details className="inline"><summary className="btn ghost sm">Estornar</summary>
                     <Formulario acao={estornar.bind(null, l.id)} enviar="Confirmar estorno" className="grid">
                       <label className="f">Motivo<input type="text" name="motivo" required minLength={3} /></label>

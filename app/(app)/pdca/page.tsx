@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { dataBR, hoje } from '@/lib/formato'
 import { carregarEstrategia } from '@/lib/estrategia-dados'
@@ -14,12 +14,12 @@ type Acao = { t: string; feito: boolean }
 type Hist = { data: string; fase: string; txt: string }
 
 export default async function Pdca() {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
-  const edita = s.papel !== 'lider'
+  const s = await exigirAcesso('pdca')
+  const edita = pode(s, 'pdca', 'editar')
   const supabase = await supabaseServidor()
   const [{ data }, est] = await Promise.all([
     supabase.from('pdca').select('*').eq('igreja_id', s.igreja.id).order('criado_em', { ascending: false }),
-    carregarEstrategia(s.igreja.id, edita),
+    carregarEstrategia(s.igreja.id, pode(s, 'diagnostico')),
   ])
   const todos = data ?? []
   const lista = [...todos].sort((a, b) => Number(a.fase === 'Concluído') - Number(b.fase === 'Concluído') || b.score - a.score)
@@ -30,7 +30,7 @@ export default async function Pdca() {
     <>
       <Cabecalho sobre="Estratégia" titulo="Ciclos PDCA"
         texto="Cada ameaça ou boa prática do diagnóstico vira um ciclo: planejar, executar, verificar no próximo diagnóstico e agir. O que deu certo vira padrão da igreja; o que não deu volta como novo ciclo."
-        acoes={<><Link className="btn ghost" href="/kanban">Ver no kanban</Link>{edita && <Link className="btn ghost" href="/diagnostico?aba=insights">Insights</Link>}</>} />
+        acoes={<><Link className="btn ghost" href="/kanban">Ver no kanban</Link>{pode(s, 'diagnostico') && <Link className="btn ghost" href="/diagnostico?aba=insights">Insights</Link>}</>} />
       <div className="grid g4">
         {FASES.map(([k, n]) => <div className="card kpi" key={k}><span className="lbl">{k} · {n}</span><span className="val">{conta(k)}</span><span className="sub">{k === 'C' ? 'aguardando medição' : k === 'A' ? 'aguardando decisão' : ''}</span></div>)}
       </div>

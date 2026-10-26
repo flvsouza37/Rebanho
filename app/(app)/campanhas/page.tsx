@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { brl, dataBR } from '@/lib/formato'
 import { PERFIL, perfilDe, numBR } from '@/lib/territorio'
@@ -10,7 +10,7 @@ export const metadata = { title: 'Campanhas' }
 const COR: Record<string, string> = { Planejada: '', 'Em andamento': 'info', 'Em avaliação': 'warn', Encerrada: 'ok' }
 
 export default async function Campanhas() {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
+  const s = await exigirAcesso('missao')
   const supabase = await supabaseServidor()
   const [{ data: camps }, { data: res }] = await Promise.all([
     supabase.from('campanhas').select('*').eq('igreja_id', s.igreja.id).order('criado_em', { ascending: false }),
@@ -25,7 +25,7 @@ export default async function Campanhas() {
     <>
       <Cabecalho sobre="Missão" titulo="Campanhas"
         texto="Cada visitante pode ser ligado à campanha que o trouxe. Assim dá para ver quais ações trazem gente e quais viram congregados e membros."
-        acoes={<><Link className="btn ghost" href="/alcance">Ver território</Link>{s.papel !== 'lider' && <Link className="btn" href="/campanhas/nova">Nova campanha</Link>}</>} />
+        acoes={<><Link className="btn ghost" href="/alcance">Ver território</Link>{pode(s, 'missao', 'editar') && <Link className="btn" href="/campanhas/nova">Nova campanha</Link>}</>} />
       <div className="grid g4">
         <div className="card kpi"><span className="lbl">Campanhas ativas</span><span className="val">{lista.filter((c) => c.status !== 'Encerrada').length}</span><span className="sub">{lista.length} no total</span></div>
         <div className="card kpi"><span className="lbl">Visitantes vindos de campanhas</span><span className="val">{tv}</span><span className="sub">meta somada: {lista.reduce((t, c) => t + c.meta, 0)}</span></div>

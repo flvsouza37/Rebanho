@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from '@/lib/z'
-import { exigir } from '@/lib/sessao'
+import { exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { hoje, msgErro } from '@/lib/formato'
 import { KCOL, COL_CAMP, FASEN } from '@/lib/estrategia'
@@ -14,7 +14,7 @@ const PDCA_DE: Record<string, string> = { afazer: 'P', fazendo: 'D', verificar: 
 
 // Move um cartão de coluna. Cada origem guarda o próprio estado; o banco decide quem pode mexer.
 export async function moverCartao(cartao: string, coluna: string): Promise<{ erro?: string; ir?: string }> {
-  await exigir(['pastor', 'secretaria', 'lider'])
+  await exigirAcesso('kanban')
   if (!KCOL.some((k) => k[0] === coluna)) return { erro: 'Coluna inválida.' }
   const [tipo, id] = cartao.split(':')
   const supabase = await supabaseServidor()
@@ -51,7 +51,7 @@ const Tarefa = z.object({
   descricao: z.string().trim().max(1000).transform((x) => x || null),
 })
 export async function salvarTarefa(_: Resultado, dados: FormData): Promise<Resultado> {
-  const s = await exigir(['pastor', 'secretaria', 'lider'])
+  const s = await exigirAcesso('kanban', 'editar')
   const v = Tarefa.safeParse(Object.fromEntries(dados))
   if (!v.success) return { erro: v.error.issues[0].message }
   const supabase = await supabaseServidor()
@@ -62,7 +62,7 @@ export async function salvarTarefa(_: Resultado, dados: FormData): Promise<Resul
 }
 
 export async function excluirTarefa(id: string) {
-  await exigir(['pastor', 'secretaria'])
+  await exigirAcesso('kanban', 'editar')
   const supabase = await supabaseServidor()
   await supabase.from('tarefas').delete().eq('id', id)
   atualizar()

@@ -2,14 +2,13 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from '@/lib/z'
-import { exigir } from '@/lib/sessao'
+import { exigir, exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { hoje, msgErro } from '@/lib/formato'
 import { carregarEstrategia } from '@/lib/estrategia-dados'
 import { GRUPOS, PROPOS, LADOS, grauDe, insights, vazio, type Diagnostico, type GrupoId, type Lado, type PropId } from '@/lib/estrategia'
 import type { Resultado } from '@/components/Formulario'
 
-const EQUIPE = ['pastor', 'secretaria'] as const
 const ehGrupo = (g: string): g is GrupoId => GRUPOS.some((x) => x[0] === g)
 const ehProp = (p: string): p is PropId => PROPOS.some((x) => x[0] === p)
 const ehLado = (l: string): l is Lado => LADOS.some((x) => x[0] === l)
@@ -24,7 +23,7 @@ async function doc(id: string) {
 
 // Um ciclo novo copia o anterior: a equipe só atualiza as notas, e a comparação vira a verificação do PDCA.
 export async function novoDiagnostico() {
-  const s = await exigir([...EQUIPE])
+  const s = await exigirAcesso('diagnostico', 'editar')
   const { atual } = await carregarEstrategia(s.igreja.id)
   const agora = new Date(), tri = Math.floor(agora.getMonth() / 3) + 1
   const base = atual ? { muda: atual.muda, diak: atual.diak } : vazio()
@@ -37,7 +36,7 @@ export async function novoDiagnostico() {
 }
 
 export async function concluirDiagnostico(id: string) {
-  await exigir([...EQUIPE])
+  await exigirAcesso('diagnostico', 'editar')
   const supabase = await supabaseServidor()
   await supabase.from('diagnosticos').update({ status: 'Concluído', concluido_em: hoje() }).eq('id', id)
   atualizar()
@@ -54,7 +53,7 @@ export async function excluirDiagnostico(id: string) {
 
 const Celula = z.object({ n: z.coerce.number().int().min(0).max(5), t: z.string().trim().max(300) })
 export async function salvarCelula(id: string, p: string, g: string, l: string, _: Resultado, dados: FormData): Promise<Resultado> {
-  await exigir([...EQUIPE])
+  await exigirAcesso('diagnostico', 'editar')
   if (!ehProp(p) || !ehGrupo(g) || !ehLado(l)) return { erro: 'Célula inválida.' }
   const v = Celula.safeParse(Object.fromEntries(dados))
   if (!v.success) return { erro: v.error.issues[0].message }
@@ -73,7 +72,7 @@ const Item = z.object({
   imp: z.coerce.number().int().min(1).max(5), at: z.coerce.number().int().min(1).max(5),
 })
 export async function salvarItem(id: string, g: string, k: string, i: number | null, _: Resultado, dados: FormData): Promise<Resultado> {
-  await exigir([...EQUIPE])
+  await exigirAcesso('diagnostico', 'editar')
   if (!ehGrupo(g) || (k !== 'exp' && k !== 'dem')) return { erro: 'Item inválido.' }
   const v = Item.safeParse(Object.fromEntries(dados))
   if (!v.success) return { erro: v.error.issues[0].message }
@@ -91,7 +90,7 @@ export async function salvarItem(id: string, g: string, k: string, i: number | n
 }
 
 export async function removerItem(id: string, g: string, k: string, i: number) {
-  await exigir([...EQUIPE])
+  await exigirAcesso('diagnostico', 'editar')
   if (!ehGrupo(g) || (k !== 'exp' && k !== 'dem')) return
   const { supabase, d } = await doc(id)
   if (!d) return
@@ -104,7 +103,7 @@ export async function removerItem(id: string, g: string, k: string, i: number) {
 
 // O insight é recalculado no servidor: a tela só manda a chave.
 async function acharInsight(chave: string) {
-  const s = await exigir([...EQUIPE])
+  const s = await exigirAcesso('diagnostico', 'editar')
   const { atual, anterior, ctx } = await carregarEstrategia(s.igreja.id)
   return { s, atual, ins: insights(atual, anterior, ctx).find((x) => x.id === chave) }
 }
