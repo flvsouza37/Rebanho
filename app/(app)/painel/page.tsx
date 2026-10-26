@@ -85,6 +85,17 @@ export default async function Painel() {
     kpis.push({ rotulo: 'Eventos nos próximos 30 dias', valor: evs?.length ?? 0, sub: evs?.length ? `próximo: ${evs[0].titulo}` : `${avisos} aviso(s) no mural`, href: '/eventos' })
   }
 
+  if (pode(s, 'escalas')) {
+    const { data: es } = await supabase.from('escalas').select('status').eq('igreja_id', ig).gte('data', hoje())
+    const tr = (es ?? []).filter((e) => e.status === 'troca').length, pend = (es ?? []).filter((e) => e.status === 'pendente').length
+    kpis.push({ rotulo: 'Escalas: pedidos de troca', valor: tr, sub: `${pend} aguardando confirmação`, href: '/escalas', alerta: tr > 0 })
+  }
+  if (pode(s, 'cantina')) {
+    const { data: pr } = await supabase.from('produtos').select('estoque, estoque_min').eq('igreja_id', ig).eq('ativo', true)
+    const baixo = (pr ?? []).filter((p) => p.estoque <= p.estoque_min).length
+    kpis.push({ rotulo: 'Cantina: produtos para repor', valor: baixo, sub: `${pr?.length ?? 0} produtos ativos`, href: '/cantina?aba=estoque', alerta: baixo > 0 })
+  }
+
   // Estratégia: ameaças do último diagnóstico e o andamento do kanban.
   let estrategia: React.ReactNode = null
   if (pode(s, 'diagnostico') || pode(s, 'pdca') || pode(s, 'kanban')) {

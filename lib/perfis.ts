@@ -4,7 +4,7 @@ export const NOME_PAPEL: Record<Papel, string> = {
   pastor: 'Pastor', tesouraria: 'Tesouraria', secretaria: 'Secretaria', lider: 'Líder de célula', membro: 'Membro',
 }
 
-export type Modulo = 'pessoas' | 'pastoral' | 'radar' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'patrimonio' | 'cargos' | 'comunicacao' | 'financeiro' | 'auditoria' | 'ouvidoria'
+export type Modulo = 'pessoas' | 'pastoral' | 'radar' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'patrimonio' | 'cargos' | 'comunicacao' | 'escalas' | 'praticas' | 'cantina' | 'financeiro' | 'auditoria' | 'ouvidoria'
 export type Nivel = 'nenhum' | 'ver' | 'editar'
 export type Acessos = Record<Modulo, Nivel>
 
@@ -20,6 +20,9 @@ export const MODULOS: [Modulo, string, string][] = [
   ['patrimonio', 'Patrimônio', 'manutenção GUT, preventivas e planos 5W2H'],
   ['cargos', 'Cargos e responsáveis', 'quem responde por cada área'],
   ['comunicacao', 'Comunicação', 'avisos, mensageria, Palavra do Pastor, eventos e site'],
+  ['escalas', 'Escalas', 'quem serve em cada culto, confirmação e troca'],
+  ['praticas', 'Boas práticas (moderação)', 'aprovar o que os membros compartilham'],
+  ['cantina', 'Cantina', 'vendas, estoque e caixa (o fechamento lança na tesouraria)'],
   ['financeiro', 'Tesouraria e contribuições', 'lançamentos, baixas, recibos e fechamento'],
   ['auditoria', 'Auditoria completa', 'histórico de tudo o que foi alterado'],
   ['ouvidoria', 'Ouvidoria', 'ler e responder sugestões e reclamações de todos'],
@@ -37,6 +40,7 @@ export const MENU: { grupo: string; itens: Item[] }[] = [
     { href: '/pessoas?s=membros', nome: 'Membros', m: ['pessoas'] },
     { href: '/pessoas?s=visitante', nome: 'Visitantes', m: ['pessoas'] },
     { href: '/radar/chamada', nome: 'Chamada', m: ['radar'] },
+    { href: '/recepcao', nome: 'Modo recepção', m: ['pessoas'] },
   ] },
   { grupo: 'Missão', itens: [
     { href: '/alcance', nome: 'Marketing evangelístico', m: ['missao'] },
@@ -60,9 +64,15 @@ export const MENU: { grupo: string; itens: Item[] }[] = [
   { grupo: 'Gestão', itens: [
     { href: '/tesouraria', nome: 'Tesouraria', m: ['financeiro'] },
     { href: '/contribuicoes', nome: 'Contribuições', m: ['financeiro'] },
+    { href: '/tesouraria/orcamento', nome: 'Orçamento', m: ['financeiro'] },
+    { href: '/cantina', nome: 'Cantina', m: ['cantina'] },
     { href: '/auditoria', nome: 'Auditoria', m: ['auditoria', 'financeiro'] },
   ] },
-  { grupo: 'Comunidade', itens: [{ href: '/ouvidoria', nome: 'Sugestões e reclamações' }] },
+  { grupo: 'Comunidade', itens: [
+    { href: '/escalas', nome: 'Escalas', m: ['escalas'] },
+    { href: '/praticas', nome: 'Boas práticas' },
+    { href: '/ouvidoria', nome: 'Sugestões e reclamações' },
+  ] },
   { grupo: 'Administração', itens: [
     { href: '/equipe', nome: 'Equipe e acessos', so: 'pastor' },
     { href: '/cargos', nome: 'Cargos e responsáveis', m: ['cargos', 'patrimonio'] },

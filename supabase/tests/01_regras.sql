@@ -351,4 +351,52 @@ select pg_temp.igual(site('igreja-a') -> 'posts' -> 0 ->> 'titulo', 'Deus cuida'
 select pg_temp.igual((select count(*) from avisos)::int, 0, 'visitante do site não lê a tabela de avisos');
 reset role;
 
+-- Gestão e comunidade: cantina, orçamento, escalas e boas práticas
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+insert into produtos (igreja_id, nome, preco, custo, estoque) values (:'ig_a', 'Coxinha', 6, 2.5, 10) returning id as prod_a \gset
+insert into caixas (igreja_id, data, troco) values (:'ig_a', current_date, 50) returning id as cx_a \gset
+select pg_temp.erro(format($$insert into caixas (igreja_id, data) values (%L, current_date)$$, :'ig_a'), 'duplicate key');
+select vender(:'cx_a', jsonb_build_array(jsonb_build_object('id', :'prod_a', 'qtd', 3)), 'Pix');
+select pg_temp.igual((select total from vendas)::numeric, 18.00, 'venda usa o preço do cadastro');
+select pg_temp.igual((select estoque from produtos where id = :'prod_a'), 7, 'venda baixa o estoque');
+select pg_temp.erro(format($$select vender(%L, jsonb_build_array(jsonb_build_object('id', %L, 'qtd', 8)), 'Pix')$$, :'cx_a', :'prod_a'), 'Estoque insuficiente');
+select pg_temp.erro($$insert into vendas (igreja_id, caixa_id, itens, total, forma) select igreja_id, id, '[]', 1, 'Pix' from caixas$$, 'row-level security');
+select pg_temp.igual((fechar_caixa(:'cx_a', current_date)).total::numeric, 18.00, 'fechar caixa soma as vendas');
+select pg_temp.igual((select categoria || '/' || valor from lancamentos where id = (select lancamento_id from caixas where id = :'cx_a')), 'Venda da cantina/18.00', 'caixa fechado vira entrada na tesouraria');
+select pg_temp.erro(format($$select fechar_caixa(%L, current_date)$$, :'cx_a'), 'já foi fechado');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+insert into orcamentos (igreja_id, ano, categoria, valor) values (:'ig_a', 2026, 'Manutenção', 12000);
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a4');
+select pg_temp.erro(format($$select vender(%L, '[]', 'Pix')$$, :'cx_a'), 'Caixa não encontrado');
+select pg_temp.igual((select count(*) from produtos)::int + (select count(*) from orcamentos)::int, 0, 'líder não vê cantina nem orçamento');
+insert into escalas (igreja_id, data, ministerio, pessoa_id) values (:'ig_a', current_date + 7, 'Louvor', '11111111-0000-0000-0000-000000000001') returning id as esc_a \gset
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a5');
+select pg_temp.igual((select count(*) from escalas)::int, 1, 'membro vê a própria escala');
+select responder_escala(:'esc_a', 'troca');
+select pg_temp.igual((select status from escalas), 'troca', 'membro pede troca');
+update escalas set ministerio = 'Mídia';
+select pg_temp.igual((select ministerio from escalas), 'Louvor', 'membro não muda a escala direto');
+insert into praticas (igreja_id, titulo, texto, categoria, autor_nome, aprovado) values (:'ig_a', 'Culto doméstico', 'Lemos um salmo por noite com as crianças.', 'Família', 'Ana', true) returning id as pr_a \gset
+select pg_temp.igual((select aprovado from praticas), false, 'prática do membro espera aprovação');
+select pg_temp.erro(format($$insert into amens (pratica_id) values (%L)$$, :'pr_a'), 'row-level security');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.igual((select count(*) from praticas)::int, 0, 'prática pendente não aparece para outros');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
+update praticas set aprovado = true where id = :'pr_a';
+select pg_temp.igual((select aprovado_por from praticas)::text, '00000000-0000-0000-0000-0000000000a3', 'secretaria aprova a prática');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+insert into amens (pratica_id) values (:'pr_a');
+select pg_temp.erro(format($$insert into amens (pratica_id) values (%L)$$, :'pr_a'), 'duplicate key');
+select pg_temp.igual((select count(*) from amens)::int, 1, 'amém conta uma vez por pessoa');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.igual((select count(*) from praticas)::int + (select count(*) from escalas)::int + (select count(*) from caixas)::int, 0, 'outra igreja não vê gestão e comunidade');
+reset role;
+
 \echo 'TODOS OS TESTES PASSARAM'

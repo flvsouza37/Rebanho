@@ -316,3 +316,8 @@ fieldset legend{padding:0;margin-bottom:6px}
 .site.publico .sect .eyebrow{color:var(--muted)}
 .site .video{width:100%;max-width:720px;aspect-ratio:16/9;border:0;border-radius:8px}
 .site .pill{align-self:flex-start;justify-self:start}
+.pdv{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.pdv .room:disabled{opacity:.45;cursor:not-allowed}
+.pedido{align-content:start;position:sticky;top:12px}
+.barra{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}.barra i{display:block;height:100%;background:var(--accent)}
+.recepcao{max-width:620px;margin:16px auto;gap:14px}.recepcao h1{font-family:var(--f-display);font-size:1.6rem;margin:0}
