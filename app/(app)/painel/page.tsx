@@ -8,7 +8,7 @@ import { brl, mesAtual, nomeMes, hoje } from '@/lib/formato'
 import { Cabecalho } from '@/components/Cabecalho'
 import { carregarEstrategia } from '@/lib/estrategia-dados'
 import { insights, grauDe } from '@/lib/estrategia'
-import { gut, proximaPreventiva, type Ameaca } from '@/lib/patrimonio'
+import { gut, proximaPreventiva, type Agenda, type Ameaca } from '@/lib/patrimonio'
 
 export const metadata = { title: 'Painel' }
 
@@ -61,18 +61,28 @@ export default async function Painel() {
   }
 
   if (pode(s, 'patrimonio')) {
-    const [{ data: am }, { data: pv }, { data: pl }] = await Promise.all([
+    const [{ data: am }, { data: pv }, { data: pl }, { data: ag }] = await Promise.all([
       supabase.from('ameacas').select('*').eq('igreja_id', ig).neq('status', 'resolvida'),
       supabase.from('preventivas').select('ultima, meses').eq('igreja_id', ig),
       supabase.from('planos').select('quando').eq('igreja_id', ig).neq('status', 'Concluído'),
+      supabase.from('eventos').select('titulo, data, ambiente').eq('igreja_id', ig).gte('data', hoje()).not('ambiente', 'is', null),
     ])
-    const abertas = (am ?? []) as Ameaca[], crit = abertas.filter((a) => gut(a, abertas).grau.k === 'crit').length
+    const abertas = (am ?? []) as Ameaca[], crit = abertas.filter((a) => gut(a, abertas, (ag ?? []) as Agenda[]).grau.k === 'crit').length
     const venc = (pv ?? []).filter((p) => proximaPreventiva(p) < hoje()).length
     const atras = (pl ?? []).filter((p) => p.quando && p.quando < hoje()).length
     kpis.push(
       { rotulo: 'Patrimônio: ameaças críticas', valor: crit, sub: `${abertas.length} abertas · ${venc} preventiva${venc === 1 ? '' : 's'} vencida${venc === 1 ? '' : 's'}`, href: '/manutencao', alerta: crit + venc > 0 },
       { rotulo: 'Planos 5W2H em andamento', valor: pl?.length ?? 0, sub: `${atras} com prazo vencido`, href: '/planos', alerta: atras > 0 },
     )
+  }
+
+  if (pode(s, 'comunicacao')) {
+    const em30 = new Date(Date.now() + 30 * 864e5).toLocaleDateString('sv-SE')
+    const [{ data: evs }, avisos] = await Promise.all([
+      supabase.from('eventos').select('titulo, data').eq('igreja_id', ig).gte('data', hoje()).lte('data', em30).order('data'),
+      conta(supabase.from('avisos').select('*', { count: 'exact', head: true }).eq('igreja_id', ig).or(`validade.is.null,validade.gte.${hoje()}`)),
+    ])
+    kpis.push({ rotulo: 'Eventos nos próximos 30 dias', valor: evs?.length ?? 0, sub: evs?.length ? `próximo: ${evs[0].titulo}` : `${avisos} aviso(s) no mural`, href: '/eventos' })
   }
 
   // Estratégia: ameaças do último diagnóstico e o andamento do kanban.

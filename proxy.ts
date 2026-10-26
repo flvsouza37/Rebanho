@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLICAS = ['/entrar', '/auth']
+const PUBLICAS = ['/entrar', '/auth', '/site']
 
 // Renova a sessão do Supabase a cada pedido e manda para o login quem não entrou.
 export async function proxy(request: NextRequest) {

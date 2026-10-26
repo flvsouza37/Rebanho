@@ -4,7 +4,7 @@ export const NOME_PAPEL: Record<Papel, string> = {
   pastor: 'Pastor', tesouraria: 'Tesouraria', secretaria: 'Secretaria', lider: 'Líder de célula', membro: 'Membro',
 }
 
-export type Modulo = 'pessoas' | 'pastoral' | 'radar' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'patrimonio' | 'cargos' | 'financeiro' | 'auditoria' | 'ouvidoria'
+export type Modulo = 'pessoas' | 'pastoral' | 'radar' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'patrimonio' | 'cargos' | 'comunicacao' | 'financeiro' | 'auditoria' | 'ouvidoria'
 export type Nivel = 'nenhum' | 'ver' | 'editar'
 export type Acessos = Record<Modulo, Nivel>
 
@@ -19,6 +19,7 @@ export const MODULOS: [Modulo, string, string][] = [
   ['kanban', 'Kanban de execução', 'tarefas e andamento das ações'],
   ['patrimonio', 'Patrimônio', 'manutenção GUT, preventivas e planos 5W2H'],
   ['cargos', 'Cargos e responsáveis', 'quem responde por cada área'],
+  ['comunicacao', 'Comunicação', 'avisos, mensageria, Palavra do Pastor, eventos e site'],
   ['financeiro', 'Tesouraria e contribuições', 'lançamentos, baixas, recibos e fechamento'],
   ['auditoria', 'Auditoria completa', 'histórico de tudo o que foi alterado'],
   ['ouvidoria', 'Ouvidoria', 'ler e responder sugestões e reclamações de todos'],
@@ -45,6 +46,12 @@ export const MENU: { grupo: string; itens: Item[] }[] = [
     { href: '/diagnostico', nome: 'Diagnóstico MUDA e Diakonia', m: ['diagnostico'] },
     { href: '/pdca', nome: 'Ciclos PDCA', m: ['pdca'] },
     { href: '/kanban', nome: 'Kanban de execução', m: ['kanban'] },
+  ] },
+  { grupo: 'Comunicação', itens: [
+    { href: '/avisos', nome: 'Avisos', m: ['comunicacao'] },
+    { href: '/mensagens', nome: 'Mensageria', m: ['comunicacao'] },
+    { href: '/palavra', nome: 'Palavra, blog e vlog', m: ['comunicacao'] },
+    { href: '/eventos', nome: 'Eventos e site', m: ['comunicacao'] },
   ] },
   { grupo: 'Patrimônio', itens: [
     { href: '/manutencao', nome: 'Manutenção GUT', m: ['patrimonio'] },

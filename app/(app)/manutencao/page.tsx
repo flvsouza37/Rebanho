@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { brl, dataBR, hoje } from '@/lib/formato'
-import { AMB, AMBN, DISC, GRAU_P, gut, respPor, nomeCargo, proximaPreventiva, type Ameaca, type Cargo } from '@/lib/patrimonio'
+import { AMB, AMBN, DISC, GRAU_P, gut, respPor, nomeCargo, proximaPreventiva, type Agenda, type Ameaca, type Cargo } from '@/lib/patrimonio'
 import { Cabecalho } from '@/components/Cabecalho'
 import { Formulario } from '@/components/Formulario'
 import { salvarAmeaca, resolverAmeaca, gerarPlano, salvarPreventiva, preventivaFeita, excluirPreventiva, preventivaNoGut } from './acoes'
@@ -37,14 +37,15 @@ export default async function Manutencao({ searchParams }: { searchParams: Promi
   const edita = pode(s, 'patrimonio', 'editar')
   const supabase = await supabaseServidor()
   const ig = s.igreja.id
-  const [{ data: am }, { data: cg }, { data: pv }] = await Promise.all([
+  const [{ data: am }, { data: cg }, { data: pv }, { data: ev }] = await Promise.all([
     supabase.from('ameacas').select('*').eq('igreja_id', ig).order('data', { ascending: false }),
     supabase.from('cargos').select('id, titulo, nome, pessoa_id, areas').eq('igreja_id', ig),
     supabase.from('preventivas').select('*').eq('igreja_id', ig).order('item'),
+    supabase.from('eventos').select('titulo, data, ambiente').eq('igreja_id', ig).gte('data', hoje()).not('ambiente', 'is', null),
   ])
   const todas = (am ?? []) as Ameaca[], cargos = (cg ?? []) as Cargo[]
   const abertas = todas.filter((a) => a.status !== 'resolvida'), resolvidas = todas.filter((a) => a.status === 'resolvida')
-  const notas = new Map(abertas.map((a) => [a.id, gut(a, abertas)]))
+  const notas = new Map(abertas.map((a) => [a.id, gut(a, abertas, (ev ?? []) as Agenda[])]))
   const fila = abertas.filter((a) => !sp.amb || a.ambiente === sp.amb).sort((a, b) => notas.get(b.id)!.score - notas.get(a.id)!.score)
   const prevs = (pv ?? []).map((p) => ({ ...p, prox: proximaPreventiva(p) }))
   const vencidas = prevs.filter((p) => p.prox < hoje())

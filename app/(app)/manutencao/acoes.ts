@@ -5,7 +5,7 @@ import { z } from '@/lib/z'
 import { exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { hoje, msgErro } from '@/lib/formato'
-import { AMBN, COMO, DISC, gut, respPor, type Ameaca, type Cargo } from '@/lib/patrimonio'
+import { AMBN, COMO, DISC, gut, respPor, type Agenda, type Ameaca, type Cargo } from '@/lib/patrimonio'
 import type { Resultado } from '@/components/Formulario'
 
 const atualizar = () => { ['/manutencao', '/planos', '/kanban', '/painel', '/cargos'].forEach((p) => revalidatePath(p)) }
@@ -46,14 +46,15 @@ export async function resolverAmeaca(id: string) {
 export async function gerarPlano(ids: string[]) {
   const s = await exigirAcesso('patrimonio', 'editar')
   const supabase = await supabaseServidor()
-  const [{ data: abertas }, { data: cargos }] = await Promise.all([
+  const [{ data: abertas }, { data: cargos }, { data: ev }] = await Promise.all([
     supabase.from('ameacas').select('*').eq('igreja_id', s.igreja.id).neq('status', 'resolvida'),
     supabase.from('cargos').select('id, titulo, nome, pessoa_id, areas').eq('igreja_id', s.igreja.id),
+    supabase.from('eventos').select('titulo, data, ambiente').eq('igreja_id', s.igreja.id).gte('data', hoje()).not('ambiente', 'is', null),
   ])
   const todas = (abertas ?? []) as Ameaca[], cs = (cargos ?? []) as Cargo[]
   const lista = ids.map((id) => todas.find((a) => a.id === id && a.status === 'aberta')).filter((a): a is Ameaca => !!a)
   if (!lista.length) redirect('/manutencao')
-  const rs = lista.map((a) => gut(a, todas)), top = rs.reduce((m, r) => (r.score > m.score ? r : m), rs[0])
+  const rs = lista.map((a) => gut(a, todas, (ev ?? []) as Agenda[])), top = rs.reduce((m, r) => (r.score > m.score ? r : m), rs[0])
   const princ = lista[rs.indexOf(top)], discs = [...new Set(lista.map((a) => a.disciplina))]
   const custo = lista.reduce((t, a) => t + Number(a.custo), 0)
   const quem = respPor(cs, princ.disciplina) ?? respPor(cs, 'Patrimônio')

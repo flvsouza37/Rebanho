@@ -309,4 +309,46 @@ select pg_temp.erro(format($$insert into planos (igreja_id, oque, quem) values (
 select pg_temp.igual((select count(*) from cargos)::int + (select count(*) from ameacas)::int, 0, 'outra igreja não vê o patrimônio');
 reset role;
 
+-- Comunicação: avisos, eventos, publicações, mensageria e site público
+select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
+insert into avisos (igreja_id, titulo, corpo, no_site) values (:'ig_a', 'Santa Ceia domingo', 'Venha participar', true);
+insert into avisos (igreja_id, titulo, corpo, validade) values (:'ig_a', 'Aviso vencido', 'Já passou', current_date - 1);
+insert into eventos (igreja_id, titulo, data, ambiente) values (:'ig_a', 'Conferência de jovens', current_date + 10, 'nav');
+insert into eventos (igreja_id, titulo, data, no_site) values (:'ig_a', 'Reunião interna', current_date + 3, false);
+insert into posts (igreja_id, tipo, titulo, resumo, autor, data) values (:'ig_a', 'palavra', 'Deus cuida', 'Uma palavra para a semana', 'Pr. Paulo', current_date);
+insert into mensagens (igreja_id, texto, publico, canais, alcance) values (:'ig_a', 'Olá, {nome}!', 'Membros', '{whatsapp}', 3);
+select pg_temp.erro(format($$insert into mensagens (igreja_id, texto, publico, canais) values (%L, 'Teste', 'Membros', '{sms}')$$, :'ig_a'), 'check constraint');
+select pg_temp.erro(format($$insert into posts (igreja_id, tipo, titulo, resumo, autor, data, video) values (%L, 'vlog', 'Vídeo', 'Resumo', 'Pr', current_date, 'javascript:alert(1)')$$, :'ig_a'), 'check constraint');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a5');
+select pg_temp.igual((select count(*) from avisos)::int + (select count(*) from eventos)::int + (select count(*) from posts)::int, 5, 'membro vê avisos, agenda e publicações');
+select pg_temp.igual((select count(*) from mensagens)::int, 0, 'membro não vê a mensageria');
+select pg_temp.erro(format($$insert into avisos (igreja_id, titulo, corpo) values (%L, 'Do membro', 'Não pode')$$, :'ig_a'), 'row-level security');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.erro(format($$insert into eventos (igreja_id, titulo, data) values (%L, 'Da tesouraria', current_date)$$, :'ig_a'), 'row-level security');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.igual((select count(*) from avisos)::int + (select count(*) from eventos)::int, 0, 'outra igreja não vê a comunicação');
+reset role;
+select set_config('request.jwt.claims', '{}', false);
+set role anon;
+select pg_temp.igual(site('igreja-a') is null, true, 'site desligado não aparece');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
+update igrejas set slug = 'igreja-a', site_publico = true where id = :'ig_a';
+reset role;
+select pg_temp.igual((select site_publico from igrejas where id = :'ig_a'), false, 'só o pastor liga o site');
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+update igrejas set slug = 'igreja-a', site_publico = true where id = :'ig_a';
+select pg_temp.erro(format($$update igrejas set slug = 'Com Espaço' where id = %L$$, :'ig_a'), 'check constraint');
+reset role;
+select set_config('request.jwt.claims', '{}', false);
+set role anon;
+select pg_temp.igual(jsonb_array_length(site('igreja-a') -> 'avisos'), 1, 'site mostra só aviso marcado e válido');
+select pg_temp.igual(jsonb_array_length(site('igreja-a') -> 'eventos'), 1, 'site esconde evento interno');
+select pg_temp.igual(site('igreja-a') -> 'posts' -> 0 ->> 'titulo', 'Deus cuida', 'site mostra a Palavra do Pastor');
+select pg_temp.igual((select count(*) from avisos)::int, 0, 'visitante do site não lê a tabela de avisos');
+reset role;
+
 \echo 'TODOS OS TESTES PASSARAM'

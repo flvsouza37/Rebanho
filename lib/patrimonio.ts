@@ -39,8 +39,11 @@ const agua = (d: string) => d === 'Hidráulica' || d === 'Estrutura e telhado'
 const sobEquip = (a: Ameaca) => ['nav', 'alt', 'som'].includes(a.ambiente) && ['Elétrica', 'Som e mídia'].includes(a.disciplina)
 
 // GUT corrigido pela correlação: ameaças no mesmo ambiente, água perto de elétrica, telhado sobre
-// equipamentos, crianças e público. O fator vai até o dobro da nota.
-export function gut(a: Ameaca, abertas: Ameaca[]): Gut {
+// equipamentos, crianças, público e evento marcado no local. O fator vai até o dobro da nota.
+export type Agenda = { titulo: string; data: string; ambiente: string | null }
+const diasAte = (d: string) => Math.round((new Date(d + 'T12:00:00').getTime() - Date.now()) / 864e5)
+
+export function gut(a: Ameaca, abertas: Ameaca[], agenda: Agenda[] = []): Gut {
   const base = a.g * a.u * a.t, porque: Gut['porque'] = [], rel = new Set<string>()
   const amb = AMBN[a.ambiente] ?? { id: a.ambiente, nome: a.ambiente }
   let f = 0
@@ -58,6 +61,8 @@ export function gut(a: Ameaca, abertas: Ameaca[]): Gut {
   }
   if (amb.criancas) { f += 0.25; porque.push(['Ambiente com crianças', 'gravidade elevada por público vulnerável', 0.25]) }
   if (a.disciplina === 'Incêndio e segurança' && amb.publico) { f += 0.3; porque.push(['Segurança em área de público', 'lotação em cultos', 0.3]) }
+  const ev = agenda.filter((e) => e.ambiente === a.ambiente && diasAte(e.data) >= 0 && diasAte(e.data) <= 21).sort((x, y) => x.data.localeCompare(y.data))[0]
+  if (ev) { f += 0.3; porque.push(['Evento marcado no local', `${ev.titulo} em ${diasAte(ev.data)} dia(s)`, 0.3]) }
   f = Math.min(1, f)
   const score = Math.round(base * (1 + f))
   return { base, score, fator: f, porque, grau: grauP(score), rel: [...rel] }
