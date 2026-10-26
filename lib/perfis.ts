@@ -4,7 +4,7 @@ export const NOME_PAPEL: Record<Papel, string> = {
   pastor: 'Pastor', tesouraria: 'Tesouraria', secretaria: 'Secretaria', lider: 'Líder de célula', membro: 'Membro',
 }
 
-export type Modulo = 'pessoas' | 'pastoral' | 'radar' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'financeiro' | 'auditoria' | 'ouvidoria'
+export type Modulo = 'pessoas' | 'pastoral' | 'radar' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'patrimonio' | 'cargos' | 'financeiro' | 'auditoria' | 'ouvidoria'
 export type Nivel = 'nenhum' | 'ver' | 'editar'
 export type Acessos = Record<Modulo, Nivel>
 
@@ -17,6 +17,8 @@ export const MODULOS: [Modulo, string, string][] = [
   ['diagnostico', 'Diagnóstico', 'Análise MUDA, Matriz Diakonia e insights'],
   ['pdca', 'Ciclos PDCA', 'planejar, executar, verificar e agir'],
   ['kanban', 'Kanban de execução', 'tarefas e andamento das ações'],
+  ['patrimonio', 'Patrimônio', 'manutenção GUT, preventivas e planos 5W2H'],
+  ['cargos', 'Cargos e responsáveis', 'quem responde por cada área'],
   ['financeiro', 'Tesouraria e contribuições', 'lançamentos, baixas, recibos e fechamento'],
   ['auditoria', 'Auditoria completa', 'histórico de tudo o que foi alterado'],
   ['ouvidoria', 'Ouvidoria', 'ler e responder sugestões e reclamações de todos'],
@@ -44,6 +46,10 @@ export const MENU: { grupo: string; itens: Item[] }[] = [
     { href: '/pdca', nome: 'Ciclos PDCA', m: ['pdca'] },
     { href: '/kanban', nome: 'Kanban de execução', m: ['kanban'] },
   ] },
+  { grupo: 'Patrimônio', itens: [
+    { href: '/manutencao', nome: 'Manutenção GUT', m: ['patrimonio'] },
+    { href: '/planos', nome: 'Planos 5W2H', m: ['patrimonio'] },
+  ] },
   { grupo: 'Gestão', itens: [
     { href: '/tesouraria', nome: 'Tesouraria', m: ['financeiro'] },
     { href: '/contribuicoes', nome: 'Contribuições', m: ['financeiro'] },
@@ -52,6 +58,7 @@ export const MENU: { grupo: string; itens: Item[] }[] = [
   { grupo: 'Comunidade', itens: [{ href: '/ouvidoria', nome: 'Sugestões e reclamações' }] },
   { grupo: 'Administração', itens: [
     { href: '/equipe', nome: 'Equipe e acessos', so: 'pastor' },
+    { href: '/cargos', nome: 'Cargos e responsáveis', m: ['cargos', 'patrimonio'] },
     { href: '/igreja', nome: 'Dados da igreja', so: 'pastor' },
   ] },
   { grupo: 'Área do membro', itens: [{ href: '/minha-area', nome: 'Minha área', so: 'membro' }] },

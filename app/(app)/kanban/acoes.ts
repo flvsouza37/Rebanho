@@ -6,10 +6,12 @@ import { exigirAcesso } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { hoje, msgErro } from '@/lib/formato'
 import { KCOL, COL_CAMP, FASEN } from '@/lib/estrategia'
+import { COL_PLANO } from '@/lib/patrimonio'
 import type { Resultado } from '@/components/Formulario'
 
-const atualizar = () => { revalidatePath('/kanban'); revalidatePath('/pdca'); revalidatePath('/campanhas'); revalidatePath('/painel') }
+const atualizar = () => { revalidatePath('/kanban'); revalidatePath('/planos'); revalidatePath('/manutencao'); revalidatePath('/pdca'); revalidatePath('/campanhas'); revalidatePath('/painel') }
 const CAMP_DE = Object.fromEntries(Object.entries(COL_CAMP).map(([k, v]) => [v, k]))
+const PLANO_DE = Object.fromEntries(Object.entries(COL_PLANO).map(([k, v]) => [v, k]))
 const PDCA_DE: Record<string, string> = { afazer: 'P', fazendo: 'D', verificar: 'C' }
 
 // Move um cartão de coluna. Cada origem guarda o próprio estado; o banco decide quem pode mexer.
@@ -21,6 +23,7 @@ export async function moverCartao(cartao: string, coluna: string): Promise<{ err
   let r
   if (tipo === 'tarefas') r = await supabase.from('tarefas').update({ coluna, feito_em: coluna === 'feito' ? hoje() : null }).eq('id', id).select('id')
   else if (tipo === 'campanhas') r = await supabase.from('campanhas').update({ status: CAMP_DE[coluna] }).eq('id', id).select('id')
+  else if (tipo === 'planos') r = await supabase.from('planos').update({ status: PLANO_DE[coluna] }).eq('id', id).select('id')
   else if (tipo === 'pdca') {
     // Fechar um ciclo exige a decisão do "Agir", que fica na tela do PDCA.
     if (coluna === 'feito') return { ir: `/pdca#pd-${id}` }

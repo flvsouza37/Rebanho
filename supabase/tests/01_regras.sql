@@ -275,4 +275,38 @@ select pg_temp.erro(format($$insert into presencas (igreja_id, pessoa_id, data) 
 select pg_temp.igual((select count(*) from presencas)::int, 0, 'outra igreja não vê a chamada');
 reset role;
 
+-- Patrimônio: cargos, ameaças GUT, 5W2H e preventivas
+select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
+insert into cargos (igreja_id, titulo, nome, areas) values (:'ig_a', 'Zelador', 'Seu João', '{Elétrica,Hidráulica,Patrimônio}') returning id as cg_a \gset
+insert into ameacas (igreja_id, titulo, ambiente, disciplina, g, u, t, custo) values (:'ig_a', 'Infiltração no forro', 'tel', 'Estrutura e telhado', 4, 4, 4, 800) returning id as am_a \gset
+insert into planos (igreja_id, oque, quem, quanto, grau, score) values (:'ig_a', 'Corrigir: Infiltração no forro', :'cg_a', 800, 'alto', 64) returning id as pl_a \gset
+update ameacas set status = 'em plano', plano_id = :'pl_a' where id = :'am_a';
+update planos set status = 'Concluído' where id = :'pl_a';
+select pg_temp.igual((select status from ameacas where id = :'am_a'), 'resolvida', 'plano concluído resolve a ameaça');
+select pg_temp.igual((select feito_em is not null from planos where id = :'pl_a'), true, 'plano concluído ganha data');
+update planos set status = 'Em execução' where id = :'pl_a';
+select pg_temp.igual((select status from ameacas where id = :'am_a'), 'em plano', 'plano reaberto devolve a ameaça');
+delete from planos where id = :'pl_a';
+select pg_temp.igual((select count(*) from planos)::int, 1, 'secretaria não exclui plano');
+select pg_temp.erro(format($$insert into ameacas (igreja_id, titulo, ambiente, disciplina, g, u, t) values (%L, 'GUT inválido', 'nav', 'Elétrica', 6, 1, 1)$$, :'ig_a'), 'check constraint');
+insert into preventivas (igreja_id, item, ambiente, disciplina, meses, ultima) values (:'ig_a', 'Recarga dos extintores', 'nav', 'Incêndio e segurança', 12, current_date - 400);
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.igual((select count(*) from ameacas)::int, 1, 'tesouraria vê o patrimônio');
+update ameacas set g = 1;
+select pg_temp.igual((select g from ameacas)::int, 4, 'tesouraria não altera o GUT');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a4');
+select pg_temp.igual((select count(*) from cargos)::int, 1, 'líder vê os cargos');
+select pg_temp.igual((select count(*) from ameacas)::int, 0, 'líder não vê o patrimônio');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+delete from planos where id = :'pl_a';
+select pg_temp.igual((select status from ameacas where id = :'am_a'), 'aberta', 'plano excluído devolve a ameaça para a fila');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.erro(format($$insert into planos (igreja_id, oque, quem) values (%L, 'Da outra igreja', %L)$$, :'ig_b', :'cg_a'), 'não pertence');
+select pg_temp.igual((select count(*) from cargos)::int + (select count(*) from ameacas)::int, 0, 'outra igreja não vê o patrimônio');
+reset role;
+
 \echo 'TODOS OS TESTES PASSARAM'

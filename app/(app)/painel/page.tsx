@@ -8,6 +8,7 @@ import { brl, mesAtual, nomeMes, hoje } from '@/lib/formato'
 import { Cabecalho } from '@/components/Cabecalho'
 import { carregarEstrategia } from '@/lib/estrategia-dados'
 import { insights, grauDe } from '@/lib/estrategia'
+import { gut, proximaPreventiva, type Ameaca } from '@/lib/patrimonio'
 
 export const metadata = { title: 'Painel' }
 
@@ -57,6 +58,21 @@ export default async function Painel() {
   if (pode(s, 'radar')) {
     const r = await carregarRadar(ig, pode(s, 'pastoral'))
     kpis.push({ rotulo: 'Pessoas em risco de afastamento', valor: r.aCuidar.length, sub: r.comChamada ? `${r.emCuidado.length} já procuradas` : 'comece pela chamada do culto', href: r.comChamada ? '/radar' : '/radar/chamada', alerta: r.aCuidar.length > 0 })
+  }
+
+  if (pode(s, 'patrimonio')) {
+    const [{ data: am }, { data: pv }, { data: pl }] = await Promise.all([
+      supabase.from('ameacas').select('*').eq('igreja_id', ig).neq('status', 'resolvida'),
+      supabase.from('preventivas').select('ultima, meses').eq('igreja_id', ig),
+      supabase.from('planos').select('quando').eq('igreja_id', ig).neq('status', 'Concluído'),
+    ])
+    const abertas = (am ?? []) as Ameaca[], crit = abertas.filter((a) => gut(a, abertas).grau.k === 'crit').length
+    const venc = (pv ?? []).filter((p) => proximaPreventiva(p) < hoje()).length
+    const atras = (pl ?? []).filter((p) => p.quando && p.quando < hoje()).length
+    kpis.push(
+      { rotulo: 'Patrimônio: ameaças críticas', valor: crit, sub: `${abertas.length} abertas · ${venc} preventiva${venc === 1 ? '' : 's'} vencida${venc === 1 ? '' : 's'}`, href: '/manutencao', alerta: crit + venc > 0 },
+      { rotulo: 'Planos 5W2H em andamento', valor: pl?.length ?? 0, sub: `${atras} com prazo vencido`, href: '/planos', alerta: atras > 0 },
+    )
   }
 
   // Estratégia: ameaças do último diagnóstico e o andamento do kanban.

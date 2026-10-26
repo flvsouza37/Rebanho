@@ -125,7 +125,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .matrix td.cell{text-align:center;cursor:pointer;padding:6px}
 .matrix td.cell span{display:inline-block;width:22px;height:22px;border-radius:6px;border:1px solid var(--line);line-height:20px;font-size:.8rem}
 .matrix td.cell.on span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.matrix th.rot{writing-mode:vertical-rl;transform:rotate(180deg);height:120px;text-align:left;padding:6px 4px;white-space:nowrap}
+.matrix th.rot{writing-mode:vertical-rl;transform:rotate(180deg);height:170px;text-align:left;padding:6px 4px;white-space:nowrap}
 /* planta do templo */
 .planta{display:grid;gap:6px;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-areas:"tel tel tel tel tel tel" "alt nav nav nav nav som" "ber ebd ebd coz sal sal" "ban ban est est maq maq"}
 .room{all:unset;cursor:pointer;border-radius:8px;padding:10px;min-height:64px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;font-size:.78rem;background:var(--surface-2);border:1px solid var(--line);min-width:0}
@@ -302,3 +302,10 @@ table.acessos input[type=radio] { width: 20px; height: 20px; accent-color: var(-
 .chamada { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px 16px; }
 .chamada label.chk { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
 .chamada label.chk:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.matrix td.cell button{all:unset;cursor:pointer;display:inline-block}
+.matrix td.cell button:focus-visible span{outline:2px solid var(--accent)}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+fieldset legend{padding:0;margin-bottom:6px}
+.fl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fl select{width:auto;max-width:100%}

@@ -3,6 +3,7 @@ import { exigirAcesso, pode } from '@/lib/sessao'
 import { supabaseServidor } from '@/lib/supabase/server'
 import { dataBR, hoje } from '@/lib/formato'
 import { KCOL, COL_CAMP, COL_PDCA, FASEN, grauDe } from '@/lib/estrategia'
+import { COL_PLANO } from '@/lib/patrimonio'
 import { Cabecalho } from '@/components/Cabecalho'
 import { Formulario } from '@/components/Formulario'
 import { Quadro } from './Quadro'
@@ -18,14 +19,18 @@ export default async function Kanban({ searchParams }: { searchParams: Promise<{
   const sp = await searchParams
   const supabase = await supabaseServidor()
   const ig = s.igreja.id
-  const [{ data: camps }, { data: ciclos }, { data: tarefas }] = await Promise.all([
+  const [{ data: camps }, { data: ciclos }, { data: tarefas }, { data: planos }, { data: cargos }] = await Promise.all([
     supabase.from('campanhas').select('id, titulo, status, fim, responsavel, microarea').eq('igreja_id', ig),
     supabase.from('pdca').select('id, titulo, tipo, fase, prazo, responsavel, score, ciclo, feito_em').eq('igreja_id', ig),
     supabase.from('tarefas').select('*').eq('igreja_id', ig),
+    pode(s, 'patrimonio') ? supabase.from('planos').select('id, oque, onde, quando, quem, grau, score, status, feito_em').eq('igreja_id', ig) : Promise.resolve({ data: [] }),
+    pode(s, 'patrimonio') ? supabase.from('cargos').select('id, nome').eq('igreja_id', ig) : Promise.resolve({ data: [] }),
   ])
+  const nomeDe = (id: string | null) => (cargos ?? []).find((c: { id: string }) => c.id === id)?.nome ?? null
   const todos: Cartao[] = [
     ...(camps ?? []).map((k) => ({ id: 'campanhas:' + k.id, col: COL_CAMP[k.status] ?? 'afazer', t: k.titulo, orig: 'Captação', prazo: k.fim, resp: k.responsavel, urg: 'mod', sub: 'Campanha' + (k.microarea ? ' · ' + k.microarea : ''), feito: k.status === 'Encerrada' ? k.fim : null, href: `/campanhas/${k.id}`, fixo: !pode(s, 'missao', 'editar') })),
     ...(ciclos ?? []).map((p) => ({ id: 'pdca:' + p.id, col: COL_PDCA[p.fase] ?? 'afazer', t: p.titulo, orig: 'PDCA', prazo: p.prazo, resp: p.responsavel, urg: p.tipo === 'pratica' ? 'ok' : grauDe(p.score).k, sub: `${p.tipo === 'pratica' ? 'Boa prática' : 'Ameaça'} · ciclo ${p.ciclo} · ${FASEN[p.fase]}`, feito: p.feito_em, href: `/pdca#pd-${p.id}`, fixo: p.fase === 'Concluído' || !pode(s, 'pdca', 'editar') })),
+    ...(planos ?? []).map((p) => ({ id: 'planos:' + p.id, col: COL_PLANO[p.status] ?? 'afazer', t: p.oque, orig: 'Manutenção', prazo: p.quando, resp: nomeDe(p.quem), urg: p.grau, sub: `5W2H · GUT ${p.score}${p.onde ? ' · ' + p.onde : ''}`, feito: p.feito_em, href: `/planos#pl-${p.id}`, fixo: !pode(s, 'patrimonio', 'editar') })),
     ...(tarefas ?? []).map((x) => ({ id: 'tarefas:' + x.id, col: x.coluna, t: x.titulo, orig: x.origem, prazo: x.prazo, resp: x.responsavel, urg: x.prioridade, sub: x.descricao ?? 'Tarefa', feito: x.feito_em, apaga: pode(s, 'kanban', 'editar'), fixo: !pode(s, 'kanban', 'editar') })),
   ]
   const origens = ['Todas', ...new Set(todos.map((c) => c.orig))]
