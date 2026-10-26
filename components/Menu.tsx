@@ -10,10 +10,13 @@ export function Menu({ papel, acessos, temFicha }: { papel: Papel; acessos: Aces
   const busca = useSearchParams()
   const atual = caminho + (busca.toString() ? '?' + busca.toString() : '')
   const grupos = MENU.map((g) => ({ ...g, itens: g.itens.filter((i) => vePagina(i, papel, acessos, temFicha)) })).filter((g) => g.itens.length)
-  const ativo = (href: string) => {
+  const casa = (href: string) => {
     const [p, q] = href.split('?')
     return q ? atual === href || (caminho.startsWith(p) && busca.toString() === q) : caminho === p || caminho.startsWith(p + '/')
   }
+  // Só o item mais específico fica marcado (/radar/chamada não acende /radar).
+  const todos = grupos.flatMap((g) => g.itens.map((i) => i.href)).filter(casa)
+  const ativo = (href: string) => casa(href) && !todos.some((h) => h !== href && h.split('?')[0].startsWith(href.split('?')[0] + '/'))
   const doAtual = grupos.find((g) => g.itens.some((i) => ativo(i.href)))?.grupo ?? null
   const [aberto, setAberto] = useState<string | null>(doAtual)
   useEffect(() => setAberto(doAtual), [doAtual])

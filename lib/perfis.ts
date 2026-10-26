@@ -4,7 +4,7 @@ export const NOME_PAPEL: Record<Papel, string> = {
   pastor: 'Pastor', tesouraria: 'Tesouraria', secretaria: 'Secretaria', lider: 'Líder de célula', membro: 'Membro',
 }
 
-export type Modulo = 'pessoas' | 'pastoral' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'financeiro' | 'auditoria' | 'ouvidoria'
+export type Modulo = 'pessoas' | 'pastoral' | 'radar' | 'missao' | 'diagnostico' | 'pdca' | 'kanban' | 'financeiro' | 'auditoria' | 'ouvidoria'
 export type Nivel = 'nenhum' | 'ver' | 'editar'
 export type Acessos = Record<Modulo, Nivel>
 
@@ -12,6 +12,7 @@ export type Acessos = Record<Modulo, Nivel>
 export const MODULOS: [Modulo, string, string][] = [
   ['pessoas', 'Membros e visitantes', 'fichas, funil de visitantes, consentimento LGPD'],
   ['pastoral', 'Anotações pastorais', 'observações sigilosas e eventos de vida'],
+  ['radar', 'Radar pastoral', 'chamada, contatos de cuidado e quem está se afastando'],
   ['missao', 'Missão', 'marketing evangelístico e campanhas'],
   ['diagnostico', 'Diagnóstico', 'Análise MUDA, Matriz Diakonia e insights'],
   ['pdca', 'Ciclos PDCA', 'planejar, executar, verificar e agir'],
@@ -25,10 +26,14 @@ export const NOME_NIVEL: Record<Nivel, string> = { nenhum: 'Sem acesso', ver: 'V
 type Item = { href: string; nome: string; m?: Modulo[]; so?: 'pastor' | 'membro' | 'equipe' }
 // O menu só esconde o que o banco já nega: a regra de verdade está nas políticas RLS.
 export const MENU: { grupo: string; itens: Item[] }[] = [
-  { grupo: 'Visão geral', itens: [{ href: '/painel', nome: 'Painel', so: 'equipe' }] },
+  { grupo: 'Visão geral', itens: [
+    { href: '/painel', nome: 'Painel', so: 'equipe' },
+    { href: '/radar', nome: 'Radar pastoral', m: ['radar'] },
+  ] },
   { grupo: 'Pessoas', itens: [
     { href: '/pessoas?s=membros', nome: 'Membros', m: ['pessoas'] },
     { href: '/pessoas?s=visitante', nome: 'Visitantes', m: ['pessoas'] },
+    { href: '/radar/chamada', nome: 'Chamada', m: ['radar'] },
   ] },
   { grupo: 'Missão', itens: [
     { href: '/alcance', nome: 'Marketing evangelístico', m: ['missao'] },

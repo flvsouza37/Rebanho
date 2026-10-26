@@ -259,4 +259,20 @@ select pg_temp.igual((select (acessos ->> 'pessoas') from equipe(:'ig_a') where 
 select adicionar_acesso(:'ig_a', 'lider@a', 'lider');
 reset role;
 
+-- Radar pastoral: chamada e contatos de cuidado
+select pg_temp.como('00000000-0000-0000-0000-0000000000a4');
+insert into presencas (igreja_id, pessoa_id, data) values (:'ig_a', '11111111-0000-0000-0000-000000000001', current_date - 7);
+select pg_temp.erro(format($$insert into presencas (igreja_id, pessoa_id, data) values (%L, '11111111-0000-0000-0000-000000000001', current_date - 7)$$, :'ig_a'), 'duplicate key');
+insert into cuidados (igreja_id, pessoa_id, forma, nota) values (:'ig_a', '11111111-0000-0000-0000-000000000001', 'Ligação', 'Está bem, viajou');
+select pg_temp.igual((select count(*) from cuidados)::int, 1, 'líder registra presença e contato');
+select pg_temp.igual((select meus_acessos(:'ig_a') ->> 'radar'), 'editar', 'radar entra no padrão do líder');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.igual((select count(*) from presencas)::int + (select count(*) from cuidados)::int, 0, 'tesouraria não vê o radar');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.erro(format($$insert into presencas (igreja_id, pessoa_id, data) values (%L, '11111111-0000-0000-0000-000000000001', current_date)$$, :'ig_b'), 'não pertence');
+select pg_temp.igual((select count(*) from presencas)::int, 0, 'outra igreja não vê a chamada');
+reset role;
+
 \echo 'TODOS OS TESTES PASSARAM'

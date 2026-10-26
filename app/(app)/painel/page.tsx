@@ -1,3 +1,4 @@
+import { carregarRadar } from '@/lib/radar'
 import { redirect } from 'next/navigation'
 import { temEquipe } from '@/lib/perfis'
 import Link from 'next/link'
@@ -51,6 +52,11 @@ export default async function Painel() {
   if (pode(s, 'ouvidoria')) {
     const ouv = await conta(supabase.from('ouvidoria').select('*', { count: 'exact', head: true }).eq('igreja_id', ig).in('status', ['Recebida', 'Em análise']))
     kpis.push({ rotulo: 'Ouvidoria em aberto', valor: ouv, sub: 'manifestações sem resposta', href: '/ouvidoria', alerta: ouv > 0 })
+  }
+
+  if (pode(s, 'radar')) {
+    const r = await carregarRadar(ig, pode(s, 'pastoral'))
+    kpis.push({ rotulo: 'Pessoas em risco de afastamento', valor: r.aCuidar.length, sub: r.comChamada ? `${r.emCuidado.length} já procuradas` : 'comece pela chamada do culto', href: r.comChamada ? '/radar' : '/radar/chamada', alerta: r.aCuidar.length > 0 })
   }
 
   // Estratégia: ameaças do último diagnóstico e o andamento do kanban.

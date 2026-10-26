@@ -294,3 +294,11 @@ table.acessos tbody th .small { display: block; }
 table.acessos td, table.acessos thead th:not(:first-child) { text-align: center; width: 72px; }
 table.acessos input[type=radio] { width: 20px; height: 20px; accent-color: var(--accent); }
 @media (max-width: 560px) { table.acessos td, table.acessos thead th:not(:first-child) { width: 44px; font-size: 11px; padding-left: 2px; padding-right: 2px; } table.acessos tbody th .small { display: none; } }
+
+/* Radar e chamada */
+.bars-mini { display: inline-flex; align-items: flex-end; gap: 2px; height: 22px; }
+.bars-mini i { width: 6px; height: 8px; border-radius: 2px; background: var(--line); }
+.bars-mini i.on { height: 22px; background: var(--accent); }
+.chamada { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px 16px; }
+.chamada label.chk { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.chamada label.chk:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
